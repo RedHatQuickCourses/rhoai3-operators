@@ -1,5 +1,5 @@
 site:
-  title: The Operator Floor — OpenShift Ecosystem & RHOAI 3.x Control Plane
+  title: OpenShift Ecosystem & RHOAI 3x Control Plane
   start_page: rhoai3-operators::index.adoc
 
 content:

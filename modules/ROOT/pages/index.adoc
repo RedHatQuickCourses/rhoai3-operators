@@ -1,4 +1,4 @@
-= The Operator Floor — OpenShift Ecosystem & RHOAI 3.x Control Plane
+= OpenShift Ecosystem & RHOAI 3.x Control Plane
 :navtitle: Home
 :toc: macro
 
