@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Lab 0 — Establishing the command center :: The Operator Floor — OpenShift Ecosystem &amp; RHOAI 3.x Control Plane</title>
+    <link rel="prev" href="architecture.html">
+    <link rel="next" href="lab1-foundation.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">The Operator Floor — OpenShift Ecosystem &amp; RHOAI 3.x Control Plane</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/rhoai3-operators/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="rhoai3-operators" data-version="3.3">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">The Operator Floor — OpenShift Ecosystem &amp; RHOAI 3.x Control Plane</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home — introduction &amp; business value</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="capabilities.html">Capabilities &amp; features</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="architecture.html">Architecture &amp; data flow</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="1">
+    <a class="nav-link" href="lab0-command-center.html">Lab 0 — Command center (Web Terminal)</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab1-foundation.html">Lab 1 — Core operator &amp; NFD</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab2-governance.html">Lab 2 — cert-manager &amp; Connectivity Link</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab3-dsc.html">Lab 3 — DataScienceCluster</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab4-scale-maas.html">Lab 4 — Leader Worker Set &amp; MaaS readiness</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="summary.html">Summary, handoff &amp; troubleshooting</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home — introduction &amp; business value</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="capabilities.html">Capabilities &amp; features</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="architecture.html">Architecture &amp; data flow</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="1">
+    <a class="nav-link" href="lab0-command-center.html">Lab 0 — Command center</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab1-foundation.html">Lab 1 — Core &amp; hardware discovery</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab2-governance.html">Lab 2 — Governance dependencies</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab3-dsc.html">Lab 3 — DataScienceCluster</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab4-scale-maas.html">Lab 4 — Scale &amp; MaaS</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="summary.html">Summary &amp; troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">The Operator Floor — OpenShift Ecosystem &amp; RHOAI 3.x Control Plane</span>
+    <span class="version">3.3</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">The Operator Floor — OpenShift Ecosystem & RHOAI 3.x Control Plane</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">3.3</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">The Operator Floor — OpenShift Ecosystem & RHOAI 3.x Control Plane</a></li>
+    <li><a href="lab0-command-center.html">Lab 0 — Command center (Web Terminal)</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Lab 0 — Establishing the command center</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph lead">
+<p><strong>Before you build the factory, you need a control room. Leave the brittle laptop toolchain behind.</strong></p>
+</div>
+<div class="paragraph">
+<p>Reproducible MaaS and GitOps demand a <strong>consistent shell</strong>. The <strong>OpenShift Web Terminal Operator</strong> gives every authorized admin an authenticated <code>oc</code> session inside the console—no VPN-split routing debates for basic tasks.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_bootstrapping_paradox"><a class="anchor" href="#_the_bootstrapping_paradox"></a>The bootstrapping paradox</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To run declarative commands, you need a client. Two paths:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Method 1 (UI)</strong> — fastest when you have admin console access only.</p>
+</li>
+<li>
+<p><strong>Method 2 (CLI/GitOps)</strong> — when you already have <code>oc</code> and want subscriptions in Git.</p>
+</li>
+</ul>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_method_1_ui_bootstrap_recommended"><a class="anchor" href="#_method_1_ui_bootstrap_recommended"></a>Method 1 — UI bootstrap (recommended)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_step_1_install"><a class="anchor" href="#_step_1_install"></a>Step 1 — Install</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Log in to the OpenShift console as <strong>cluster admin</strong>.</p>
+</li>
+<li>
+<p>Open <strong>Ecosystem</strong> → <strong>Software Catalog</strong> (or <strong>Operators</strong> → <strong>OperatorHub</strong>, depending on console version).</p>
+</li>
+<li>
+<p>Search for <code>terminal</code>.</p>
+</li>
+<li>
+<p>Install <strong>Web Terminal</strong> (Red Hat). Approve the <strong>InstallPlan</strong> if your cluster uses manual approval.</p>
+</li>
+</ol>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="title">Simulation placeholder</div>
+<div class="paragraph">
+<p>Replace the iframe <code>src</code> below with your Arcade or walkthrough URL when available.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<iframe src="[INSERT_ARCADE_WEB_TERMINAL_URL_ASYNC]" width="100%" height="500px" frameborder="0" allowfullscreen webkitallowfullscreen mozallowfullscreen allow="clipboard-write" muted> </iframe>
+<hr>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_method_2_cli_alternative_gitops"><a class="anchor" href="#_method_2_cli_alternative_gitops"></a>Method 2 — CLI alternative (GitOps)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_step_1_subscription"><a class="anchor" href="#_step_1_subscription"></a>Step 1 — Subscription</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt;EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: web-terminal
+  namespace: openshift-operators
+spec:
+  channel: fast
+  name: web-terminal
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_2_verify_csv"><a class="anchor" href="#_step_2_verify_csv"></a>Step 2 — Verify CSV</h3>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get csv -n openshift-operators | grep web-terminal</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expect <strong>Succeeded</strong>.</p>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_initialization"><a class="anchor" href="#_initialization"></a>Initialization</h2>
+<div class="sectionbody">
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Click the terminal icon (<code>&gt;_</code>) in the console header.</p>
+</li>
+<li>
+<p>Start a workspace (for example project <code>openshift-terminal</code>).</p>
+</li>
+<li>
+<p>Run:</p>
+</li>
+</ol>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc project</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You should see the active namespace—proof the session is authenticated.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_next_step"><a class="anchor" href="#_next_step"></a>Next step</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><a href="lab1-foundation.html" class="xref page">Lab 1 — Core operator &amp; NFD</a>.</p>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="architecture.html">Architecture &amp; data flow</a></span>
+  <span class="next"><a href="lab1-foundation.html">Lab 1 — Core operator &amp; NFD</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

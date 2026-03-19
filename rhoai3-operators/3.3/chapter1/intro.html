@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Industrializing GenAI — Architecting the operator foundation :: The Operator Floor — OpenShift Ecosystem &amp; RHOAI 3.x Control Plane</title>
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">The Operator Floor — OpenShift Ecosystem &amp; RHOAI 3.x Control Plane</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/rhoai3-operators/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="rhoai3-operators" data-version="3.3">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">The Operator Floor — OpenShift Ecosystem &amp; RHOAI 3.x Control Plane</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home — introduction &amp; business value</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="capabilities.html">Capabilities &amp; features</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="architecture.html">Architecture &amp; data flow</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab0-command-center.html">Lab 0 — Command center (Web Terminal)</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab1-foundation.html">Lab 1 — Core operator &amp; NFD</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab2-governance.html">Lab 2 — cert-manager &amp; Connectivity Link</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab3-dsc.html">Lab 3 — DataScienceCluster</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab4-scale-maas.html">Lab 4 — Leader Worker Set &amp; MaaS readiness</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="summary.html">Summary, handoff &amp; troubleshooting</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home — introduction &amp; business value</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="capabilities.html">Capabilities &amp; features</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="architecture.html">Architecture &amp; data flow</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab0-command-center.html">Lab 0 — Command center</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab1-foundation.html">Lab 1 — Core &amp; hardware discovery</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab2-governance.html">Lab 2 — Governance dependencies</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab3-dsc.html">Lab 3 — DataScienceCluster</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab4-scale-maas.html">Lab 4 — Scale &amp; MaaS</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="summary.html">Summary &amp; troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">The Operator Floor — OpenShift Ecosystem &amp; RHOAI 3.x Control Plane</span>
+    <span class="version">3.3</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">The Operator Floor — OpenShift Ecosystem & RHOAI 3.x Control Plane</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">3.3</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">The Operator Floor — OpenShift Ecosystem & RHOAI 3.x Control Plane</a></li>
+    <li><a href="intro.html">Industrializing GenAI — Architecting the operator foundation</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Industrializing GenAI — Architecting the operator foundation</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph lead">
+<p><strong>Stop consuming tokens. Start producing them. But first, you must pour the factory floor.</strong></p>
+</div>
+<div class="paragraph">
+<p>Enterprises default to a <strong>token-consumption</strong> posture: rent intelligence from the public cloud, absorb unpredictable unit economics, and route sensitive prompts off-prem. Shadow AI makes it worse—ad-hoc clusters, hand-tuned pods, and GPUs purchased as team pets instead of shared capacity. None of that maximizes <strong>GPU ROI</strong> or shrinks <strong>time-to-first-token (TTFT)</strong> for the workloads that matter.</p>
+</div>
+<div class="paragraph">
+<p>This course is <strong>Phase 0</strong> of the <strong>industrialized AI token platform</strong> arc. Downstream modules assume a <strong>running, intentionally configured</strong> Red Hat OpenShift AI (RHOAI) 3.x stack. Here you act as the <strong>platform engineer</strong> who installs only the operators and operands the journey actually needs—no trophy hunting in OperatorHub.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p><strong>Business value in one sentence:</strong> Every hour spent debugging a half-installed operator or a wrong DSC toggle is an hour your GPUs are not generating billable or auditable tokens. This module exists to collapse that gap.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_dependency_matrix_operators_mapped_to_the_journey"><a class="anchor" href="#_the_dependency_matrix_operators_mapped_to_the_journey"></a>The dependency matrix — operators mapped to the journey</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Provisioning <strong>every</strong> operator is an anti-pattern: you pay in CPU, memory, reconciliation storms, and upgrade risk. Provision against outcomes.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Journey phase</th>
+<th class="tableblock halign-left valign-top">Operators (typical)</th>
+<th class="tableblock halign-left valign-top">What it unlocks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Phase 1 — Assembling the factory</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Red Hat OpenShift AI</code>, <code>Node Feature Discovery (NFD)</code>, GPU vendor operators (NVIDIA/AMD), <code>Red Hat build of Kueue</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Data Connections path, Model Catalog, Model Registry (with backing DB), hardware profiles, fair-share GPU queues</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Phase 2 — Token production engine</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cert-manager</code> (OpenShift cert-manager operator)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TLS material for KServe-style serving; secure routes to inference without hand-rolled secrets</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Phase 3 — Scaling the utility</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Leader Worker Set</code>, <code>Red Hat Connectivity Link</code> (Kuadrant / Gateway API path)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Distributed inference (<code>llm-d</code> patterns), governed <strong>Models-as-a-Service (MaaS)</strong> surfaces (where productized in your release—confirm TP/GA in release notes)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Phase 4 — Governance &amp; compound systems</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TrustyAI, service mesh, telemetry <strong>(as required by your compliance story)</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Guardrails, drift detection, and observable SLOs for production agents</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>Exact component names and channels drift by minor release. Treat the manifests in the labs as <strong>patterns</strong>; validate <code>channel</code>, <code>source</code>, and CRD versions against <strong>Red Hat OpenShift AI Self-Managed 3.3</strong> documentation (see <a href="capabilities.html#further-reading" class="xref page">Further reading</a>).</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_your_mission_assemble_the_platform"><a class="anchor" href="#_your_mission_assemble_the_platform"></a>Your mission — assemble the platform</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>We standardize on <strong>GitOps-friendly manifests</strong> and the <strong>OpenShift Web Terminal</strong> so you are not blocked on laptop VPN quirks.</p>
+</div>
+<div class="paragraph">
+<p><strong>Workflow</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Lab 0</strong> — Web Terminal operator: authenticated <code>oc</code> from the browser.</p>
+</li>
+<li>
+<p><strong>Lab 1</strong> — RHOAI operator subscription + NFD: meta-operator present; nodes advertise accelerators.</p>
+</li>
+<li>
+<p><strong>Lab 2</strong> — <code>cert-manager</code> + Connectivity Link: TLS for serving; gateway policy plane for MaaS-style exposure.</p>
+</li>
+<li>
+<p><strong>Lab 3</strong> — <code>DataScienceCluster</code>: flip components from <strong>Installed</strong> to <strong>Managed</strong> with intent.</p>
+</li>
+<li>
+<p><strong>Lab 4</strong> — Leader Worker Set + MaaS readiness checks: scale-out inference prerequisites.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>When the checklist in <a href="summary.html" class="xref page">Summary &amp; troubleshooting</a> is green, hand off to storage, registry, catalog, and hardware-profile modules in the broader journey.</p>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Summary, handoff &amp; troubleshooting :: The Operator Floor — OpenShift Ecosystem &amp; RHOAI 3.x Control Plane</title>
+    <link rel="prev" href="lab4-scale-maas.html">
+    <link rel="next" href="../index.html">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">The Operator Floor — OpenShift Ecosystem &amp; RHOAI 3.x Control Plane</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/rhoai3-operators/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="rhoai3-operators" data-version="3.3">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">The Operator Floor — OpenShift Ecosystem &amp; RHOAI 3.x Control Plane</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home — introduction &amp; business value</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="capabilities.html">Capabilities &amp; features</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="architecture.html">Architecture &amp; data flow</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab0-command-center.html">Lab 0 — Command center (Web Terminal)</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab1-foundation.html">Lab 1 — Core operator &amp; NFD</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab2-governance.html">Lab 2 — cert-manager &amp; Connectivity Link</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab3-dsc.html">Lab 3 — DataScienceCluster</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab4-scale-maas.html">Lab 4 — Leader Worker Set &amp; MaaS readiness</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="1">
+    <a class="nav-link" href="summary.html">Summary, handoff &amp; troubleshooting</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home — introduction &amp; business value</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="capabilities.html">Capabilities &amp; features</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="architecture.html">Architecture &amp; data flow</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab0-command-center.html">Lab 0 — Command center</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab1-foundation.html">Lab 1 — Core &amp; hardware discovery</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab2-governance.html">Lab 2 — Governance dependencies</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab3-dsc.html">Lab 3 — DataScienceCluster</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab4-scale-maas.html">Lab 4 — Scale &amp; MaaS</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="1">
+    <a class="nav-link" href="summary.html">Summary &amp; troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">The Operator Floor — OpenShift Ecosystem &amp; RHOAI 3.x Control Plane</span>
+    <span class="version">3.3</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">The Operator Floor — OpenShift Ecosystem & RHOAI 3.x Control Plane</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">3.3</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">The Operator Floor — OpenShift Ecosystem & RHOAI 3.x Control Plane</a></li>
+    <li><a href="summary.html">Summary, handoff &amp; troubleshooting</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Summary, handoff &amp; troubleshooting</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph lead">
+<p><strong>The foundation is poured. The machinery is wired. Now organize the supply chain—data, models, profiles—not more operators.</strong></p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_infrastructure_checkpoint"><a class="anchor" href="#_infrastructure_checkpoint"></a>Infrastructure checkpoint</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Before leaving Phase 0, confirm:</p>
+</div>
+<div class="ulist checklist">
+<ul class="checklist">
+<li>
+<p><i class="fa fa-check-square-o"></i> <strong>Web Terminal</strong> — browser <code>oc</code> works for GitOps execution.</p>
+</li>
+<li>
+<p><i class="fa fa-check-square-o"></i> <strong>Red Hat OpenShift AI</strong> operator CSV <strong>Succeeded</strong> in <code>redhat-ods-operator</code>.</p>
+</li>
+<li>
+<p><i class="fa fa-check-square-o"></i> <strong>NFD</strong> workers running; nodes expose accelerator labels after GPU operator install (GPU operator is usually a separate subscription—follow <strong>Working with accelerators</strong> in docs).</p>
+</li>
+<li>
+<p><i class="fa fa-check-square-o"></i> <strong>cert-manager</strong> CSV <strong>Succeeded</strong> in <code>cert-manager-operator</code>.</p>
+</li>
+<li>
+<p><i class="fa fa-check-square-o"></i> <strong>Connectivity Link</strong> CSV <strong>Succeeded</strong> in <code>openshift-operators</code>.</p>
+</li>
+<li>
+<p><i class="fa fa-check-square-o"></i> <strong><code>DataScienceCluster</code></strong> status <strong>Ready</strong>; dashboard route resolves.</p>
+</li>
+<li>
+<p><i class="fa fa-check-square-o"></i> <strong>Leader Worker Set</strong> CSV <strong>Succeeded</strong> (if you completed Lab 4).</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_handoff_what_to_run_next"><a class="anchor" href="#_handoff_what_to_run_next"></a>Handoff — what to run next</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You are ready for <strong>Phase 1 — Assembling the factory</strong> in the broader journey:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Storage / data connections</strong> — bind object storage without credential sprawl.</p>
+</li>
+<li>
+<p><strong>Model registry</strong> — connect backing database; govern artifact promotion.</p>
+</li>
+<li>
+<p><strong>Model catalog</strong> — curate what developers may deploy.</p>
+</li>
+<li>
+<p><strong>Hardware profiles &amp; Kueue</strong> — turn labeled GPUs into <strong>shared</strong> capacity with queues.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Keep using Git for Subscriptions and for <code>DataScienceCluster</code> revisions—treat the console as a <strong>read-only dashboard</strong>, not the source of truth.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_troubleshooting_operator_and_control_plane_class_failures"><a class="anchor" href="#_troubleshooting_operator_and_control_plane_class_failures"></a>Troubleshooting — operator and control-plane class failures</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Symptoms below are <strong>deliberately practical</strong>; always cross-check with the <strong>Installing</strong> and <strong>Managing OpenShift AI</strong> PDFs in <code>rhoai33docs</code>.</p>
+</div>
+<div class="sect2">
+<h3 id="_csv_stuck_in_pending_or_installing"><a class="anchor" href="#_csv_stuck_in_pending_or_installing"></a>CSV stuck in <code>Pending</code> or <code>Installing</code></h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Cause:</strong> Image pull, missing OperatorGroup, or manual InstallPlan not approved.</p>
+</li>
+<li>
+<p><strong>Checks:</strong> <code>oc get installplan -n &lt;operator-ns&gt;</code>, <code>oc describe csv -n &lt;operator-ns&gt; &lt;csv-name&gt;</code>.</p>
+</li>
+<li>
+<p><strong>Fix pattern:</strong> Approve InstallPlan, fix pull secrets for disconnected clusters, verify CatalogSource health (<code>oc get catalogsource -n openshift-marketplace</code>).</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_subscription_reports_constraintsnotsatisfiable"><a class="anchor" href="#_subscription_reports_constraintsnotsatisfiable"></a>Subscription reports <code>ConstraintsNotSatisfiable</code></h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Cause:</strong> Channel/catalog mismatch or conflicting installed operators.</p>
+</li>
+<li>
+<p><strong>Fix:</strong> Align <code>channel</code> with documentation for your OpenShift + RHOAI combination; remove obsolete CatalogSources if your platform team rotated them.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_datasciencecluster_never_reaches_ready"><a class="anchor" href="#_datasciencecluster_never_reaches_ready"></a><code>DataScienceCluster</code> never reaches <code>Ready</code></h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Cause:</strong> Unsatisfied component dependencies (for example serving prerequisites), storage class issues for PVCs, or invalid <code>managementState</code> combinations.</p>
+</li>
+<li>
+<p><strong>Checks:</strong> <code>oc describe datasciencecluster default-dsc</code>, operator logs in <code>redhat-ods-operator</code>, and component namespaces for CrashLoop pods.</p>
+</li>
+<li>
+<p><strong>Fix:</strong> Fix the <strong>first</strong> failing component in status—downstream errors are often noise.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_dashboard_gateway_routes_http_404_or_tls_errors"><a class="anchor" href="#_dashboard_gateway_routes_http_404_or_tls_errors"></a>Dashboard / gateway routes — HTTP 404 or TLS errors</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>404:</strong> Route exists but backing service not ready—finish CSV/DSC reconciliation first.</p>
+</li>
+<li>
+<p><strong>TLS:</strong> cert-manager not installed or issuer not configured for the serving stack—revisit <a href="lab2-governance.html" class="xref page">Lab 2</a>.</p>
+</li>
+<li>
+<p><strong>Corporate MITM proxies:</strong> Clients may need trust anchors; that is an enterprise PKI problem, not an AI model problem.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_kuadrant_gateway_pods_missing"><a class="anchor" href="#_kuadrant_gateway_pods_missing"></a>Kuadrant / gateway pods missing</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Cause:</strong> Connectivity Link not finished installing, or namespace changed between versions.</p>
+</li>
+<li>
+<p><strong>Fix:</strong> Verify CSV, then search cluster-wide (<code>oc get pods -A | grep -i kuadrant</code>). Consult <strong>Govern LLM access with Models-as-a-Service</strong> for the exact namespace layout for your release.</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>When in doubt, <strong>reduce the problem</strong>: uninstall the last operator added, confirm cluster stability, reinstall on the documented channel, then reapply <code>DataScienceCluster</code> only after all prerequisites are green.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph text-center">
+<p><strong>Phase 0 — Operator foundation complete</strong></p>
+</div>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="lab4-scale-maas.html">Lab 4 — Leader Worker Set &amp; MaaS readiness</a></span>
+  <span class="next"><a href="../index.html">Home — introduction &amp; business value</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>
