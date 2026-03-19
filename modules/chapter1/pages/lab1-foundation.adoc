@@ -1,0 +1,142 @@
+= Lab 1 — Assembling the foundation
+:navtitle: Lab 1 — Core & NFD
+:toc: macro
+
+:page-role: hands-on-lab
+:description: Install the Red Hat OpenShift AI operator and Node Feature Discovery (NFD) using declarative Subscriptions.
+
+[.lead]
+*Pour the concrete: meta-operator on the cluster, hardware truth on the nodes.*
+
+Use the **Web Terminal** (`>_`) as **cluster admin**.
+
+== 1. Red Hat OpenShift AI operator
+
+The meta-operator owns reconciliation for RHOAI components once a `DataScienceCluster` exists.
+
+=== Apply manifests
+
+Adjust **channel** if your documentation specifies a different `stable-3.x` mapping for your minor release.
+
+[source,bash]
+----
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: redhat-ods-operator
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: rhods-operator
+  namespace: redhat-ods-operator
+spec:
+  targetNamespaces:
+  - redhat-ods-operator
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: rhods-operator
+  namespace: redhat-ods-operator
+spec:
+  name: rhods-operator
+  channel: stable-3.x
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF
+----
+
+=== Verify CSV
+
+[source,bash]
+----
+oc get csv -n redhat-ods-operator
+----
+
+**Value:** At this stage the operator is **armed** but waiting on xref:lab3-dsc.adoc[Lab 3 — DataScienceCluster] to materialize the factory UI and serving controllers.
+
+== 2. Node Feature Discovery (NFD)
+
+GPUs you cannot **label** are GPUs you cannot **schedule** reliably.
+
+=== Install operator
+
+[source,bash]
+----
+cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-nfd
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: openshift-nfd
+  namespace: openshift-nfd
+spec:
+  targetNamespaces:
+  - openshift-nfd
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: nfd
+  namespace: openshift-nfd
+spec:
+  channel: stable
+  name: nfd
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF
+----
+
+=== Create NodeFeatureDiscovery CR
+
+[IMPORTANT]
+====
+The operand image **must** match your OpenShift version family. Replace the image reference below with the value from current NFD documentation if this example lags your cluster.
+====
+
+[source,bash]
+----
+cat <<EOF | oc apply -f -
+apiVersion: nfd.openshift.io/v1
+kind: NodeFeatureDiscovery
+metadata:
+  name: nfd-instance
+  namespace: openshift-nfd
+spec:
+  operand:
+    image: registry.redhat.io/openshift4/ose-node-feature-discovery:v4.14
+  workerConfig:
+    configData: |
+      core:
+        sleepInterval: 60s
+EOF
+----
+
+=== Verify workers
+
+[source,bash]
+----
+oc get pods -n openshift-nfd -l app=nfd-worker
+----
+
+== Optional — console verification
+
+[NOTE]
+.Simulation placeholder
+====
+Replace iframe URL when your Arcade asset is ready.
+====
+
+++++
+<iframe src="[INSERT_ARCADE_VERIFY_OPERATORS_URL_ASYNC]" width="100%" height="500px" frameborder="0" allowfullscreen webkitallowfullscreen mozallowfullscreen allow="clipboard-write" muted> </iframe>
+++++
+
+== Next step
+
+xref:lab2-governance.adoc[Lab 2 — cert-manager & Connectivity Link].

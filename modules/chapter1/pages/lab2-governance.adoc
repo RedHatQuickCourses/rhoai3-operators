@@ -1,0 +1,77 @@
+= Lab 2 — Deploying governance dependencies
+:navtitle: Lab 2 — TLS & gateway policy
+:toc: macro
+
+:page-role: hands-on-lab
+:description: Install cert-manager and Red Hat Connectivity Link to prepare secure KServe-style serving and MaaS gateway policy paths.
+
+[.lead]
+*An unmanaged endpoint is a liability. A governed endpoint is a product.*
+
+Lab 1 gave you the **meta-operator** and **hardware truth**. Before inference traffic should flow, install the **TLS factory** and the **policy plane** the journey expects for Phase 2–3.
+
+== 1. cert-manager (OpenShift operator)
+
+KServe-oriented stacks commonly depend on in-cluster certificate issuance—avoid one-off TLS secrets.
+
+[source,bash]
+----
+cat <<EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: openshift-cert-manager-operator
+  namespace: cert-manager-operator
+spec:
+  channel: stable-v1
+  name: openshift-cert-manager-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF
+----
+
+**ROI link:** No cert-manager → serving reconciliation stalls or runs insecure-by-exception—both are expensive conversations with security teams.
+
+== 2. Red Hat Connectivity Link
+
+Installs the **Kuadrant**-oriented connectivity layer used with **Gateway API** patterns for governed MaaS exposure (confirm feature maturity in release notes).
+
+[source,bash]
+----
+cat <<EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: connectivity-link-operator
+  namespace: openshift-operators
+spec:
+  channel: stable-v1
+  name: connectivity-link-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF
+----
+
+== 3. Verification
+
+[source,bash]
+----
+oc get csv -n cert-manager-operator | grep cert-manager
+oc get csv -n openshift-operators | grep connectivity-link
+----
+
+Expect **Succeeded** for both.
+
+[NOTE]
+.Simulation placeholder
+====
+Replace iframe URL when ready.
+====
+
+++++
+<iframe src="[INSERT_ARCADE_VERIFY_GOV_OPERATORS_URL_ASYNC]" width="100%" height="500px" frameborder="0" allowfullscreen webkitallowfullscreen mozallowfullscreen allow="clipboard-write" muted> </iframe>
+++++
+
+== Next step
+
+Activate operands via xref:lab3-dsc.adoc[Lab 3 — DataScienceCluster].

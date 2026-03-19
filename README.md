@@ -1,60 +1,75 @@
-## Getting started with a new training content repository
+# Red Hat OpenShift AI 3.x — Operator ecosystem & control plane (Phase 0)
 
-- Open the [course-starter-template](https://github.com/RedHatQuickCourses/course-starter-template)
+**From shadow clusters to a governed AI factory floor**
 
-- Click on `Use This template` button and select `Create a new repository` option.
+> **The problem:** Ad-hoc OpenShift AI installs, mystery CSV failures, and `DataScienceCluster` toggles left at defaults—GPUs idle while teams debate who owns the next outage.  
+> **The outcome:** A **repeatable operator baseline**—OLM subscriptions, NFD + GPU truth, TLS for serving, gateway/policy prerequisites, and an intentional `DataScienceCluster`—so downstream modules (storage, registry, catalog, serving, MaaS) run on **known infrastructure**.
 
-![use-this-template.png](./images/use-this-template.png)
+This repository is a **course-in-a-box** (Antora) for platform engineers building **Red Hat OpenShift AI (RHOAI) 3.3** on OpenShift 4: architecture, GitOps-style manifests, labs, and troubleshooting aligned with the *industrialized AI token platform* narrative.
 
-- On `Create a new repository` page, Select the options as highlighted in the below image and then click `Create repository` button at the bottom of the page.
+---
 
-![create-new-repo.png](./images/create-new-repo.png)
+## What you will do
 
-- Clone this repository on your local system:
-```
-git clone git@github.com:RedHatQuickCourses/my-training-repository.git
-```
-NOTE: Use your repository url in the above command.
+* Map **which operators** unlock which journey phases—without installing the entire catalog.
+* Understand **control plane vs execution plane** (OLM, meta-operator, DSC, gateways).
+* Install **Web Terminal**, **OpenShift AI**, **NFD**, **cert-manager**, **Connectivity Link**, **Leader Worker Set**, and activate **DataScienceCluster** with selective components.
+* Complete a **readiness checklist** before handoff to storage, registry, and catalog courses.
 
-- Go in to the course repository directory and initialize the course.
-``` 
-cd my-training-repository/
-sh course-init.sh --type bfx --lab demo
-```
-NOTE: If you are using Mac, use *zsh* in place of *sh* in the above command.
+---
 
-Sample output:
-```
-Initializing my-training-repository . . . done
+## Prerequisites
 
-Please replace the specified strings in the files below and commit the changes before proceeding with the course development.
-antora.yml:title: REPLACE Course Title
-```
+* OpenShift cluster with **cluster-admin** (or equivalent) for operator installation
+* Documentation bundle **Red Hat OpenShift AI Self-Managed 3.3** (PDFs)—local folder in this workspace is often named `rhoai33docs`
+* Optional: GPU nodes and vendor GPU operator (follow *Working with accelerators* in product docs)
 
-- Edit the files prompted by course initialization script.
+---
 
-- Commit the changes done by course initialization script and your manual edits.
-```
- git status 
- git add -A; git commit -m "course initialization"
- git push origin main 
+## Build the site locally
+
+```bash
+cd rhoai3-operators
+npm ci
+npm run build
+npm run serve   # optional: preview build/site
 ```
 
-- Browse your git repository url 
+Open the URL printed by `http-server` (default `http://127.0.0.1:8080`).
 
-- On your github repo page, on left hand side pane, click on settings gear icon near `About` heading.
+---
 
-- Click `Use your GitHub Pages website` option to select (checked) it and then click `Save changes` button.
+## Repository layout
 
-![github-pages-setting](./images/github-pages-setting.png)
+| Path | Purpose |
+|------|---------|
+| `antora.yml` | Component name, title, version, navigation |
+| `antora-playbook.yml` | Local Antora playbook |
+| `modules/ROOT/` | Home page (includes chapter 1 intro) |
+| `modules/chapter1/pages/` | Course pages (intro → labs → summary) |
+| `supplemental-ui/` | Site chrome (e.g., issue link) |
+| `ui-bundle/ui-bundle.zip` | Antora UI bundle |
 
-- You should now see the link to access the rendered content within that same block.
+---
 
-![quickcourse-rendered-url](./images/quickcourse-rendered-url.png)
+## Publishing
 
-FIXME: highlight the relevant area on images.
+GitHub Actions workflow **Publish to GitHub Pages** runs `npm ci` and `npm run build` on pushes to `main`. Enable Pages from the `gh-pages` branch in repository settings if not already configured.
 
-**SEE ALSO**
+---
 
-- [Development using devspace](./DEVSPACE.md)
-- [Guideline for editing your content](./USAGEGUIDE.adoc)
+## Related journey modules
+
+This course is **Phase 0** for the broader RHOAI 3 journey: `rhoai3-storage`, `rhoai3-registry`, `rhoai3-catalog`, `rhoai3-hwprofiles`, `rhoai3-deploy`, `rhoai3-llmd`, `rhoai3-maas`, and validation content.
+
+---
+
+## Contributing
+
+Use **Report Issues** in the rendered site header, or open an issue in this repository.
+
+**See also**
+
+* [Development using a Dev Space](./DEVSPACE.md)
+* [Editing content](./USAGEGUIDE.adoc)
+* [Training metadata](./README-TRAINING.md)

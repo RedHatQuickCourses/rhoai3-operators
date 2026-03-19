@@ -1,8 +1,8 @@
 schemaVersion: 2.1.0
 metadata:
-  name: REPLACEREPONAME-dev
-  displayName: RHODS Quick Course
-  description: RHODS Quick Course published using Antora
+  name: rhoai3-operators-dev
+  displayName: RHOAI 3.x Operators Quick Course
+  description: Antora course for OpenShift AI operator foundation and DataScienceCluster (RHOAI 3.3)
   icon: https://nodejs.org/static/images/logos/nodejs-new-pantone-black.svg
   tags:
     - Node.js
@@ -12,10 +12,10 @@ metadata:
   language: JavaScript
   version: 2.1.1
 starterProjects:
-  - name: REPLACEREPONAME-dev
+  - name: rhoai3-operators-dev
     git:
       remotes:
-        origin: 'https://github.com/RedHatTraining/REPLACEREPONAME.git'
+        origin: 'https://github.com/RedHatQuickCourses/rhoai3-operators.git'
 components:
   - name: runtime
     container:

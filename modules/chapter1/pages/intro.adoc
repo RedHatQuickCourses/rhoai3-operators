@@ -1,0 +1,62 @@
+= Industrializing GenAI — Architecting the operator foundation
+:navtitle: Introduction & business value
+:toc: macro
+
+:page-role: product-concept
+:description: Phase 0 of the industrialized AI platform path — map and install the OpenShift and OpenShift AI operators that turn a cluster into a governed token factory.
+
+[.lead]
+*Stop consuming tokens. Start producing them. But first, you must pour the factory floor.*
+
+Enterprises default to a *token-consumption* posture: rent intelligence from the public cloud, absorb unpredictable unit economics, and route sensitive prompts off-prem. Shadow AI makes it worse—ad-hoc clusters, hand-tuned pods, and GPUs purchased as team pets instead of shared capacity. None of that maximizes **GPU ROI** or shrinks **time-to-first-token (TTFT)** for the workloads that matter.
+
+This course is **Phase 0** of the *industrialized AI token platform* arc. Downstream modules assume a **running, intentionally configured** Red Hat OpenShift AI (RHOAI) 3.x stack. Here you act as the **platform engineer** who installs only the operators and operands the journey actually needs—no trophy hunting in OperatorHub.
+
+[IMPORTANT]
+====
+**Business value in one sentence:** Every hour spent debugging a half-installed operator or a wrong DSC toggle is an hour your GPUs are not generating billable or auditable tokens. This module exists to collapse that gap.
+====
+
+== The dependency matrix — operators mapped to the journey
+
+Provisioning *every* operator is an anti-pattern: you pay in CPU, memory, reconciliation storms, and upgrade risk. Provision against outcomes.
+
+[cols="1,2,2", options="header"]
+|===
+| Journey phase | Operators (typical) | What it unlocks
+
+| **Phase 1 — Assembling the factory**
+| `Red Hat OpenShift AI`, `Node Feature Discovery (NFD)`, GPU vendor operators (NVIDIA/AMD), `Red Hat build of Kueue`
+| Data Connections path, Model Catalog, Model Registry (with backing DB), hardware profiles, fair-share GPU queues
+
+| **Phase 2 — Token production engine**
+| `cert-manager` (OpenShift cert-manager operator)
+| TLS material for KServe-style serving; secure routes to inference without hand-rolled secrets
+
+| **Phase 3 — Scaling the utility**
+| `Leader Worker Set`, `Red Hat Connectivity Link` (Kuadrant / Gateway API path)
+| Distributed inference (`llm-d` patterns), governed **Models-as-a-Service (MaaS)** surfaces (where productized in your release—confirm TP/GA in release notes)
+
+| **Phase 4 — Governance & compound systems**
+| TrustyAI, service mesh, telemetry *(as required by your compliance story)*
+| Guardrails, drift detection, and observable SLOs for production agents
+|===
+
+[NOTE]
+====
+Exact component names and channels drift by minor release. Treat the manifests in the labs as **patterns**; validate `channel`, `source`, and CRD versions against *Red Hat OpenShift AI Self-Managed 3.3* documentation (see xref:chapter1:capabilities.adoc#further-reading[Further reading]).
+====
+
+== Your mission — assemble the platform
+
+We standardize on **GitOps-friendly manifests** and the **OpenShift Web Terminal** so you are not blocked on laptop VPN quirks.
+
+**Workflow**
+
+. **Lab 0** — Web Terminal operator: authenticated `oc` from the browser.
+. **Lab 1** — RHOAI operator subscription + NFD: meta-operator present; nodes advertise accelerators.
+. **Lab 2** — `cert-manager` + Connectivity Link: TLS for serving; gateway policy plane for MaaS-style exposure.
+. **Lab 3** — `DataScienceCluster`: flip components from *Installed* to *Managed* with intent.
+. **Lab 4** — Leader Worker Set + MaaS readiness checks: scale-out inference prerequisites.
+
+When the checklist in xref:chapter1:summary.adoc[Summary & troubleshooting] is green, hand off to storage, registry, catalog, and hardware-profile modules in the broader journey.

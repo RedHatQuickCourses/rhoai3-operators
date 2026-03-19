@@ -1,0 +1,89 @@
+= Lab 0 — Establishing the command center
+:navtitle: Lab 0 — Web Terminal
+:toc: macro
+
+:page-role: hands-on-lab
+:description: Install the OpenShift Web Terminal Operator from the console or CLI for zero-install, browser-based oc access.
+
+[.lead]
+*Before you build the factory, you need a control room. Leave the brittle laptop toolchain behind.*
+
+Reproducible MaaS and GitOps demand a **consistent shell**. The **OpenShift Web Terminal Operator** gives every authorized admin an authenticated `oc` session inside the console—no VPN-split routing debates for basic tasks.
+
+== The bootstrapping paradox
+
+To run declarative commands, you need a client. Two paths:
+
+* **Method 1 (UI)** — fastest when you have admin console access only.
+* **Method 2 (CLI/GitOps)** — when you already have `oc` and want subscriptions in Git.
+
+---
+
+== Method 1 — UI bootstrap (recommended)
+
+=== Step 1 — Install
+
+. Log in to the OpenShift console as **cluster admin**.
+. Open **Ecosystem** → **Software Catalog** (or **Operators** → **OperatorHub**, depending on console version).
+. Search for `terminal`.
+. Install **Web Terminal** (Red Hat). Approve the **InstallPlan** if your cluster uses manual approval.
+
+[NOTE]
+.Simulation placeholder
+====
+Replace the iframe `src` below with your Arcade or walkthrough URL when available.
+====
+
+++++
+<iframe src="[INSERT_ARCADE_WEB_TERMINAL_URL_ASYNC]" width="100%" height="500px" frameborder="0" allowfullscreen webkitallowfullscreen mozallowfullscreen allow="clipboard-write" muted> </iframe>
+++++
+
+---
+
+== Method 2 — CLI alternative (GitOps)
+
+=== Step 1 — Subscription
+
+[source,bash]
+----
+cat <<EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: web-terminal
+  namespace: openshift-operators
+spec:
+  channel: fast
+  name: web-terminal
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF
+----
+
+=== Step 2 — Verify CSV
+
+[source,bash]
+----
+oc get csv -n openshift-operators | grep web-terminal
+----
+
+Expect **Succeeded**.
+
+---
+
+== Initialization
+
+. Click the terminal icon (`>_`) in the console header.
+. Start a workspace (for example project `openshift-terminal`).
+. Run:
+
+[source,bash]
+----
+oc project
+----
+
+You should see the active namespace—proof the session is authenticated.
+
+== Next step
+
+xref:lab1-foundation.adoc[Lab 1 — Core operator & NFD].

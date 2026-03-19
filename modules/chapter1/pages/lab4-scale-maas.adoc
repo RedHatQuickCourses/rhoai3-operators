@@ -1,0 +1,79 @@
+= Lab 4 — Scaling the utility (distributed inference & MaaS readiness)
+:navtitle: Lab 4 — LWS & gateway
+:toc: macro
+
+:page-role: hands-on-lab
+:description: Install the Leader Worker Set operator and verify Connectivity Link / Kuadrant-style pods for governed MaaS paths.
+
+[.lead]
+*A single GPU is a bottleneck. A sharded, governed serving tier is a **line**.*
+
+This lab closes Phase 0 prerequisites for **Phase 3** topics: very large models and **internal MaaS** exposure.
+
+== 1. Leader Worker Set operator
+
+Distributed inference patterns (for example `llm-d`) rely on leader/worker pod coordination beyond vanilla Deployments.
+
+[source,bash]
+----
+cat <<EOF | oc apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: leader-worker-set
+  namespace: openshift-operators
+spec:
+  channel: stable
+  name: leader-worker-set
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF
+----
+
+[source,bash]
+----
+oc get csv -n openshift-operators | grep leader-worker-set
+----
+
+**ROI framing:** Without LWS-class orchestration primitives, teams buy **more** nodes instead of **better** utilization—CapEx wins over discipline.
+
+== 2. MaaS gateway readiness (Connectivity Link)
+
+You installed **Connectivity Link** in xref:lab2-governance.adoc[Lab 2]. Confirm the control plane pods exist (namespace may vary by version—adjust if docs specify otherwise):
+
+[source,bash]
+----
+oc get pods -n kuadrant-system
+----
+
+If empty, list namespaces and search for kuadrant-related workloads:
+
+[source,bash]
+----
+oc get pods -A | grep -i kuadrant
+----
+
+[IMPORTANT]
+====
+**Do not confuse "pods running" with "policies attached."** Full MaaS auth and rate limits are configured in downstream modules; here you only prove the **dependency chain** is present.
+====
+
+[NOTE]
+.Simulation placeholder
+====
+Replace iframe URL when ready.
+====
+
+++++
+<iframe src="[INSERT_ARCADE_MAAS_GATEWAY_URL_ASYNC]" width="100%" height="500px" frameborder="0" allowfullscreen webkitallowfullscreen mozallowfullscreen allow="clipboard-write" muted> </iframe>
+++++
+
+== Checkpoint
+
+. Phase 1 factory operators: RHOAI + NFD (+ GPU operators outside this lab).
+. Phase 2 TLS: cert-manager CSV healthy.
+. Phase 3 scale/govern: LWS installed; gateway policy operator footprint verified.
+
+== Next step
+
+xref:summary.adoc[Summary, handoff & troubleshooting].

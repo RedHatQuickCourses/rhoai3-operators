@@ -1,6 +1,6 @@
 ## Development using devspace 
 
-- Access the devspace url (FIXME: url link)
+- Access your **OpenShift Dev Spaces** URL (provided by your platform team or lab environment).
 
 - Click on `Log in with OpenShift` button.
 
@@ -55,8 +55,6 @@ NOTE: Make sure you have initialized your training content repository and commit
 - You may continue with your content development in the `vscode` interface provided by devspace.
 
 - When you save your changes in the content files in devspace interface, the changes will be reflected in the rendered content url as soon as you refresh the url.
-
-FIXME: highlight the relevant area on images.
 
 **SEE ALSO**
 

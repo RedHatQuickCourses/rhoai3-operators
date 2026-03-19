@@ -1,6 +1,6 @@
 site:
-  title: FIXME Course Title
-  start_page: REPLACEREPONAME::index.adoc
+  title: The Operator Floor — OpenShift Ecosystem & RHOAI 3.x Control Plane
+  start_page: rhoai3-operators::index.adoc
 
 content:
   sources:
