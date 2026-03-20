@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>OpenShift Ecosystem &amp; RHOAI 3.x Control Plane :: OpenShift Ecosystem &amp; RHOAI 3x Control Plane</title>
-    <link rel="next" href="chapter1/capabilities.html">
+    <link rel="next" href="chapter1/architecture.html">
     <meta name="generator" content="Antora 3.1.3">
     <link rel="stylesheet" href="../../_/css/site.css">
     <script>var uiRootPath = '../../_'</script>
@@ -46,9 +46,6 @@
   <li class="nav-item" data-depth="0">
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="chapter1/capabilities.html">Capabilities &amp; features</a>
-  </li>
-  <li class="nav-item" data-depth="1">
     <a class="nav-link" href="chapter1/architecture.html">Architecture &amp; data flow</a>
   </li>
   <li class="nav-item" data-depth="1">
@@ -58,13 +55,13 @@
     <a class="nav-link" href="chapter1/lab1-foundation.html">Lab 1 — Core &amp; hardware discovery</a>
   </li>
   <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
     <a class="nav-link" href="chapter1/lab2-governance.html">Lab 2 — Governance dependencies</a>
-  </li>
-  <li class="nav-item" data-depth="1">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="chapter1/lab3-dsc.html">Lab 3 — DataScienceCluster</a>
   </li>
-  <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="chapter1/lab4-scale-maas.html">Lab 4 — Scale &amp; MaaS</a>
+</ul>
   </li>
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="chapter1/summary.html">Summary &amp; troubleshooting</a>
@@ -111,122 +108,84 @@
 <article class="doc">
 <h1 class="page">OpenShift Ecosystem &amp; RHOAI 3.x Control Plane</h1>
 <div class="sect1">
-<h2 id="_industrializing_genai_architecting_the_operator_foundation"><a class="anchor" href="#_industrializing_genai_architecting_the_operator_foundation"></a>Industrializing GenAI — Architecting the operator foundation</h2>
+<h2 id="_architecting_the_operator_foundation"><a class="anchor" href="#_architecting_the_operator_foundation"></a>Architecting the Operator Foundation</h2>
 <div class="sectionbody">
 <div class="paragraph lead">
-<p><strong>Stop consuming tokens. Start producing them. But first, you must pour the factory floor.</strong></p>
+<p><strong>Stop consuming tokens. Start producing them. But first, we need to configure the platform.</strong></p>
 </div>
 <div class="paragraph">
-<p>Enterprises default to a <strong>token-consumption</strong> posture: rent intelligence from the public cloud, absorb unpredictable unit economics, and route sensitive prompts off-prem. Shadow AI makes it worse—ad-hoc clusters, hand-tuned pods, and GPUs purchased as team pets instead of shared capacity. None of that maximizes <strong>GPU ROI</strong> or shrinks <strong>time-to-first-token (TTFT)</strong> for the workloads that matter.</p>
+<p>Enterprises default to a <strong>token-consumption</strong> posture: they rent intelligence from the public cloud, absorb unpredictable unit economics, and route sensitive prompts off-prem. Shadow AI makes it worse—ad-hoc clusters, hand-tuned pods, and GPUs purchased as team pets instead of shared, governed capacity. None of that maximizes your <strong>GPU ROI</strong> or shrinks the <strong>time-to-first-token (TTFT)</strong> for the workloads that matter to the business.</p>
 </div>
 <div class="paragraph">
-<p>This course is <strong>Phase 0</strong> of the <strong>industrialized AI token platform</strong> arc. Downstream modules assume a <strong>running, intentionally configured</strong> Red Hat OpenShift AI (RHOAI) 3.x stack. Here you act as the <strong>platform engineer</strong> who installs only the operators and operands the journey actually needs—no trophy hunting in OperatorHub.</p>
+<p>This course is <strong>Phase 0</strong> of the <strong>Foundations to Scalable AI platform</strong> arc. The modules to follow assume you have a greenfield OpenShift AI 3.3 environment with GPUs.</p>
 </div>
-<div class="admonitionblock important">
+<div class="paragraph">
+<p>Here, you act as the <strong>platform engineer</strong> who installs only the operators and operands the journey actually needs to build a Generative AI application platform that provides AI Model Inference at Scale using Models-as-a-Service (MaaS).</p>
+</div>
+<hr>
+<div class="sect2">
+<h3 id="_what_is_an_operator_and_why_do_we_care"><a class="anchor" href="#_what_is_an_operator_and_why_do_we_care"></a>What is an Operator? (And why do we care?)</h3>
+<div class="paragraph">
+<p>An <strong>Operator</strong> is a software extension that uses Custom Resources (CRs) to manage applications and their underlying components. Think of it as an automated Site Reliability Engineer (SRE) encoded into software. Operators are <strong>long-lived reconcilers</strong>. They continuously monitor the cluster state and actively reconcile the <strong>desired state</strong> you declare in your YAML against the actual state running on the execution plane.</p>
+</div>
+<div class="paragraph">
+<p>Red Hat OpenShift AI uses a <strong>meta-operator</strong> approach. Installing the Red Hat OpenShift AI Operator does <strong>not</strong> instantly materialize every user interface and serving pod. Instead, this core meta-operator deploys most and maintains all underlying components and sub-operators. It acts as a <strong>factory manager</strong> waiting for a declarative blueprint—specifically, the <code>DataScienceCluster</code> Custom Resource—to tell it exactly what subsystems to activate.</p>
+</div>
+<div class="admonitionblock warning">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-important" title="Important"></i>
+<i class="fa icon-warning" title="Warning"></i>
 </td>
 <td class="content">
+<div class="title">Architectural Reality Check for RHOAI 3.3</div>
 <div class="paragraph">
-<p><strong>Business value in one sentence:</strong> Every hour spent debugging a half-installed operator or a wrong DSC toggle is an hour your GPUs are not generating billable or auditable tokens. This module exists to collapse that gap.</p>
+<p>OpenShift AI 3.0 and later introduces significant technology and component changes and is intended for <strong>new installations only</strong>. You cannot directly upgrade from OpenShift AI 2.25 or earlier.</p>
+</div>
+<div class="paragraph">
+<p>To build our MaaS factory, plan to deploy models using Distributed Inference with llm-d. Your cluster <strong>must be running OpenShift version 4.20 or later</strong>. Distributed Inference with `llm-d is the high-performance, Kubernetes-native framework designed specifically for serving LLMs at scale.</p>
 </div>
 </td>
 </tr>
 </table>
+</div>
+<hr>
 </div>
 <div class="sect2">
-<h3 id="_the_dependency_matrix_operators_mapped_to_the_journey"><a class="anchor" href="#_the_dependency_matrix_operators_mapped_to_the_journey"></a>The dependency matrix — operators mapped to the journey</h3>
+<h3 id="_your_mission_assemble_the_platform"><a class="anchor" href="#_your_mission_assemble_the_platform"></a>Your Mission: Assemble the Platform</h3>
 <div class="paragraph">
-<p>Provisioning <strong>every</strong> operator is an anti-pattern: you pay in CPU, memory, reconciliation storms, and upgrade risk. Provision against outcomes.</p>
-</div>
-<table class="tableblock frame-all grid-all stretch">
-<colgroup>
-<col style="width: 20%;">
-<col style="width: 40%;">
-<col style="width: 40%;">
-</colgroup>
-<thead>
-<tr>
-<th class="tableblock halign-left valign-top">Journey phase</th>
-<th class="tableblock halign-left valign-top">Operators (typical)</th>
-<th class="tableblock halign-left valign-top">What it unlocks</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Phase 1 — Assembling the factory</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Red Hat OpenShift AI</code>, <code>Node Feature Discovery (NFD)</code>, GPU vendor operators (NVIDIA/AMD), <code>Red Hat build of Kueue</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Data Connections path, Model Catalog, Model Registry (with backing DB), hardware profiles, fair-share GPU queues</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Phase 2 — Token production engine</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>cert-manager</code> (OpenShift cert-manager operator)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">TLS material for KServe-style serving; secure routes to inference without hand-rolled secrets</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Phase 3 — Scaling the utility</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>Leader Worker Set</code>, <code>Red Hat Connectivity Link</code> (Kuadrant / Gateway API path)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Distributed inference (<code>llm-d</code> patterns), governed <strong>Models-as-a-Service (MaaS)</strong> surfaces (where productized in your release—confirm TP/GA in release notes)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Phase 4 — Governance &amp; compound systems</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">TrustyAI, service mesh, telemetry <strong>(as required by your compliance story)</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Guardrails, drift detection, and observable SLOs for production agents</p></td>
-</tr>
-</tbody>
-</table>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-<div class="paragraph">
-<p>Exact component names and channels drift by minor release. Treat the manifests in the labs as <strong>patterns</strong>; validate <code>channel</code>, <code>source</code>, and CRD versions against <strong>Red Hat OpenShift AI Self-Managed 3.3</strong> documentation (see <a href="chapter1/capabilities.html#further-reading" class="xref page">Further reading</a>).</p>
-</div>
-</td>
-</tr>
-</table>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_your_mission_assemble_the_platform"><a class="anchor" href="#_your_mission_assemble_the_platform"></a>Your mission — assemble the platform</h3>
-<div class="paragraph">
-<p>We standardize on <strong>GitOps-friendly manifests</strong> and the <strong>OpenShift Web Terminal</strong> so you are not blocked on laptop VPN quirks.</p>
+<p>In this course, you will take on the role of the Platform Engineer to lay the groundwork for this entire journey. We will avoid local machine configurations entirely by utilizing native cloud tools.</p>
 </div>
 <div class="paragraph">
-<p><strong>Workflow</strong></p>
+<p><strong>You will execute the following workflow:</strong></p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><strong>Lab 0</strong> — Web Terminal operator: authenticated <code>oc</code> from the browser.</p>
+<p><strong>Lab 0:</strong> Install the OpenShift Web Terminal Operator to establish a zero-dependency command line interface for our cluster.</p>
 </li>
 <li>
-<p><strong>Lab 1</strong> — RHOAI operator subscription + NFD: meta-operator present; nodes advertise accelerators.</p>
+<p><strong>Lab 1:</strong> Deploy the foundational dependencies (<code>cert-manager</code> and <code>Connectivity Link</code>) required for Phase 2 serving and Phase 3 MaaS scaling.</p>
 </li>
 <li>
-<p><strong>Lab 2</strong> — <code>cert-manager</code> + Connectivity Link: TLS for serving; gateway policy plane for MaaS-style exposure.</p>
+<p><strong>Lab 2:</strong> Install the core OpenShift AI Operator and map your physical hardware using NFD to support Phase 1.</p>
 </li>
 <li>
-<p><strong>Lab 3</strong> — <code>DataScienceCluster</code>: flip components from <strong>Installed</strong> to <strong>Managed</strong> with intent.</p>
-</li>
-<li>
-<p><strong>Lab 4</strong> — Leader Worker Set + MaaS readiness checks: scale-out inference prerequisites.</p>
+<p><strong>Lab 3:</strong> Configure the <code>DataScienceCluster</code> to activate the exact components needed for your token factory.</p>
 </li>
 </ol>
 </div>
+</div>
+<div class="sect2">
+<h3 id="_the_shift_to_declarative_deployment"><a class="anchor" href="#_the_shift_to_declarative_deployment"></a>The Shift to Declarative Deployment</h3>
 <div class="paragraph">
-<p>When the checklist in <a href="chapter1/summary.html" class="xref page">Summary &amp; troubleshooting</a> is green, hand off to storage, registry, catalog, and hardware-profile modules in the broader journey.</p>
+<p>Throughout this course, we standardize on <strong>GitOps-friendly manifests</strong> and CLI-driven deployments. Clicking through the Ecosystem (OperatorHub) user interface is fine for a temporary sandbox, but reproducible Models-as-a-Service (MaaS) demands a consistent, auditable trail. We will declare our subscriptions, channels, and dependencies as code.</p>
 </div>
 </div>
 </div>
 </div>
 <nav class="pagination">
-  <span class="next"><a href="chapter1/capabilities.html">Capabilities &amp; features</a></span>
+  <span class="next"><a href="chapter1/architecture.html">Architecture &amp; data flow</a></span>
 </nav>
 </article>
   </div>

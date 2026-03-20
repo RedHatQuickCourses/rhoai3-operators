@@ -3,14 +3,15 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Lab 2 — Deploying governance dependencies :: OpenShift Ecosystem &amp; RHOAI 3x Control Plane</title>
+    <title>Lab 2 — Configuring Hardware Profiles &amp; Accelerators :: OpenShift Ecosystem &amp; RHOAI 3x Control Plane</title>
     <link rel="prev" href="lab1-foundation.html">
     <link rel="next" href="lab3-dsc.html">
+    <meta name="description" content="Bridge the gap between the infrastructure execution plane and the data scientist user experience by configuring Hardware Profiles.">
     <meta name="generator" content="Antora 3.1.3">
     <link rel="stylesheet" href="../../../_/css/site.css">
     <script>var uiRootPath = '../../../_'</script>
   </head>
-  <body class="article">
+  <body class="article hands-on-lab">
 <header class="header">
   <nav class="navbar">
     <div class="navbar-brand">
@@ -47,9 +48,6 @@
   <li class="nav-item" data-depth="0">
 <ul class="nav-list">
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="capabilities.html">Capabilities &amp; features</a>
-  </li>
-  <li class="nav-item" data-depth="1">
     <a class="nav-link" href="architecture.html">Architecture &amp; data flow</a>
   </li>
   <li class="nav-item" data-depth="1">
@@ -59,13 +57,13 @@
     <a class="nav-link" href="lab1-foundation.html">Lab 1 — Core &amp; hardware discovery</a>
   </li>
   <li class="nav-item is-current-page" data-depth="1">
+    <button class="nav-item-toggle"></button>
     <a class="nav-link" href="lab2-governance.html">Lab 2 — Governance dependencies</a>
-  </li>
-  <li class="nav-item" data-depth="1">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="lab3-dsc.html">Lab 3 — DataScienceCluster</a>
   </li>
-  <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="lab4-scale-maas.html">Lab 4 — Scale &amp; MaaS</a>
+</ul>
   </li>
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="summary.html">Summary &amp; troubleshooting</a>
@@ -110,103 +108,159 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">Lab 2 — Deploying governance dependencies</h1>
+<h1 class="page">Lab 2 — Configuring Hardware Profiles &amp; Accelerators</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph lead">
-<p><strong>An unmanaged endpoint is a liability. A governed endpoint is a product.</strong></p>
+<p><strong>Your GPUs are online, but your data scientists cannot see them. It is time to connect the factory floor to the storefront.</strong></p>
 </div>
 <div class="paragraph">
-<p>Lab 1 gave you the <strong>meta-operator</strong> and <strong>hardware truth</strong>. Before inference traffic should flow, install the <strong>TLS factory</strong> and the <strong>policy plane</strong> the journey expects for Phase 2–3.</p>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_1_cert_manager_openshift_operator"><a class="anchor" href="#_1_cert_manager_openshift_operator"></a>1. cert-manager (OpenShift operator)</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>KServe-oriented stacks commonly depend on in-cluster certificate issuance—avoid one-off TLS secrets.</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt;EOF | oc apply -f -
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  name: openshift-cert-manager-operator
-  namespace: cert-manager-operator
-spec:
-  channel: stable-v1
-  name: openshift-cert-manager-operator
-  source: redhat-operators
-  sourceNamespace: openshift-marketplace
-EOF</code></pre>
-</div>
+<p>In Lab 0, we deployed the Node Feature Discovery (NFD) and NVIDIA GPU operators. In Lab 1, we activated the core AI factory subsystems. At this point, your OpenShift cluster is fully aware of its hardware acceleration capabilities. However, your data scientists are not Kubernetes engineers—they should not be writing <code>nodeSelectors</code> or <code>tolerations</code> manually to schedule a model training job.</p>
 </div>
 <div class="paragraph">
-<p><strong>ROI link:</strong> No cert-manager → serving reconciliation stalls or runs insecure-by-exception—both are expensive conversations with security teams.</p>
+<p>We bridge this gap using <strong>Hardware Profiles</strong>. A Hardware Profile acts as a product catalog entry, translating complex Kubernetes scheduling constraints into a simple, user-friendly dropdown menu in the OpenShift AI Dashboard.</p>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_2_red_hat_connectivity_link"><a class="anchor" href="#_2_red_hat_connectivity_link"></a>2. Red Hat Connectivity Link</h2>
-<div class="sectionbody">
-<div class="paragraph">
-<p>Installs the <strong>Kuadrant</strong>-oriented connectivity layer used with <strong>Gateway API</strong> patterns for governed MaaS exposure (confirm feature maturity in release notes).</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt;EOF | oc apply -f -
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  name: connectivity-link-operator
-  namespace: openshift-operators
-spec:
-  channel: stable-v1
-  name: connectivity-link-operator
-  source: redhat-operators
-  sourceNamespace: openshift-marketplace
-EOF</code></pre>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_3_verification"><a class="anchor" href="#_3_verification"></a>3. Verification</h2>
-<div class="sectionbody">
-<div class="listingblock">
-<div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get csv -n cert-manager-operator | grep cert-manager
-oc get csv -n openshift-operators | grep connectivity-link</code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>Expect <strong>Succeeded</strong> for both.</p>
-</div>
-<div class="admonitionblock note">
+<div class="admonitionblock important">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-note" title="Note"></i>
+<i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-<div class="title">Simulation placeholder</div>
+<div class="title">Technology Preview Notice</div>
 <div class="paragraph">
-<p>Replace iframe URL when ready.</p>
+<p>The hardware profiles feature is currently available in Red Hat OpenShift AI 3.3 as a Technology Preview feature. Technology Preview features provide early access to upcoming product features , but are not recommended for production environments requiring strict Red Hat SLAs.</p>
 </div>
 </td>
 </tr>
 </table>
 </div>
-<iframe src="[INSERT_ARCADE_VERIFY_GOV_OPERATORS_URL_ASYNC]" width="100%" height="500px" frameborder="0" allowfullscreen webkitallowfullscreen mozallowfullscreen allow="clipboard-write" muted> </iframe>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_next_step"><a class="anchor" href="#_next_step"></a>Next step</h2>
+<h2 id="_1_the_strategy_hiding_the_infrastructure"><a class="anchor" href="#_1_the_strategy_hiding_the_infrastructure"></a>1. The Strategy: Hiding the Infrastructure</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Activate operands via <a href="lab3-dsc.html" class="xref page">Lab 3 — DataScienceCluster</a>.</p>
+<p>When a data scientist requests a GPU for a workbench or a model deployment, the underlying pod must contain specific <code>resources.limits</code> and <code>tolerations</code> to ensure it lands on a node with the physical hardware.</p>
+</div>
+<div class="paragraph">
+<p>If you force users to manually inject:
+<code>nvidia.com/gpu: 1</code> and <code>tolerations: nvidia.com/gpu:NoSchedule</code>
+&#8230;&#8203;you will spend your entire week debugging pending pods due to typographical errors.</p>
+</div>
+<div class="paragraph">
+<p>By defining a <code>HardwareProfile</code> Custom Resource (CR) as the platform engineer, you encode these rules once.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_2_verify_accelerator_detection"><a class="anchor" href="#_2_verify_accelerator_detection"></a>2. Verify Accelerator Detection</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Before we create the profile, let&#8217;s mathematically prove the Operator layer did its job. We need to ensure the cluster actually recognizes the allocatable GPU capacity.</p>
+</div>
+<div class="paragraph">
+<p>In your Web Terminal, check a specific GPU-enabled worker node:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Expected output when the accelerator is detected correctly
+oc describe node &lt;your-gpu-node-name&gt; | grep -A 5 "Allocatable:"</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You must see the accelerator listed under the allocatable resources, for example:
+<code>nvidia.com/gpu: 1</code>.</p>
+</div>
+<div class="paragraph">
+<p>If this reads <code>0</code> or is missing, your NVIDIA GPU Operator <code>ClusterPolicy</code> from Lab 0 has not finished reconciling, or NFD failed to label the node. Do not proceed until you have allocatable GPU capacity.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_3_applying_the_hardware_profile_blueprint"><a class="anchor" href="#_3_applying_the_hardware_profile_blueprint"></a>3. Applying the Hardware Profile Blueprint</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>We will use our declarative, GitOps-friendly approach to create a standard NVIDIA GPU profile.</p>
+</div>
+<div class="paragraph">
+<p>Copy and paste the following into your authenticated Web Terminal. This manifest creates a profile that automatically injects the exact identifiers and tolerations required by the NVIDIA GPU Operator into any workload that selects it:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt;EOF | oc apply -f -
+apiVersion: dashboard.opendatahub.io/v1alpha1
+kind: HardwareProfile
+metadata:
+  name: nvidia-gpu-standard
+  namespace: redhat-ods-applications
+spec:
+  displayName: "Standard NVIDIA GPU"
+  description: "Allocates 1 NVIDIA GPU for compute-intensive workloads and model serving."
+  enabled: true
+  identifiers:
+    - identifier: nvidia.com/gpu
+      displayName: NVIDIA GPU
+      minCount: 1
+      maxCount: 4
+      defaultCount: 1
+  tolerations:
+    - effect: NoSchedule
+      key: nvidia.com/gpu
+      operator: Exists
+EOF</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_4_verification_validation"><a class="anchor" href="#_4_verification_validation"></a>4. Verification &amp; Validation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Let&#8217;s verify that the catalog item is now available for your tenants.</p>
+</div>
+<div class="sect2">
+<h3 id="_step_a_check_the_custom_resource"><a class="anchor" href="#_step_a_check_the_custom_resource"></a>Step A: Check the Custom Resource</h3>
+<div class="paragraph">
+<p>Confirm the cluster accepted the profile:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get hardwareprofiles -n redhat-ods-applications</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Expect to see <code>nvidia-gpu-standard</code> listed.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_step_b_verify_the_user_experience"><a class="anchor" href="#_step_b_verify_the_user_experience"></a>Step B: Verify the User Experience</h3>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Open the OpenShift AI Dashboard in your browser.</p>
+</li>
+<li>
+<p>Navigate to <strong>Settings</strong> → <strong>Hardware profiles</strong> to view the active catalog.</p>
+</li>
+<li>
+<p>To test the execution path, navigate to <strong>Projects</strong> → <strong>Create workbench</strong>].</p>
+</li>
+<li>
+<p>Scroll down to the <strong>Deployment size</strong> section.</p>
+</li>
+<li>
+<p>You will now see a <strong>Hardware profile</strong> list. Open it and confirm that <strong>Standard NVIDIA GPU</strong> is available for selection.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>By selecting this profile, the user&#8217;s workbench pod will automatically request the <code>nvidia.com/gpu</code> limits and tolerate the GPU node taints. The factory floor is now officially connected to the storefront.</p>
+</div>
+<hr>
+<div class="paragraph">
+<p>Whenever you are ready, we can proceed to <strong>Lab 3: Serving Runtimes &amp; TLS Integrations</strong>, where we will ensure our factory can securely host and scale large models using KServe and the <code>cert-manager</code> foundation we laid earlier.</p>
+</div>
 </div>
 </div>
 </div>
