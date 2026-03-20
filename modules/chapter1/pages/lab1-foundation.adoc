@@ -1,142 +1,125 @@
-= Lab 1 — Assembling the foundation
-:navtitle: Lab 1 — Core & NFD
+= Lab 1 — Activating the AI Factory (DataScienceCluster)
+:navtitle: Lab 1 — DataScienceCluster
 :toc: macro
-
 :page-role: hands-on-lab
-:description: Install the Red Hat OpenShift AI operator and Node Feature Discovery (NFD) using declarative Subscriptions.
+:description: Configure the DataScienceCluster custom resource to enable the dashboard, model registry, KServe, Kueue, and MaaS APIs while removing unused components.
 
 [.lead]
-*Pour the concrete: meta-operator on the cluster, hardware truth on the nodes.*
+*Operators provide the potential. The `DataScienceCluster` provides your **intent**.*
 
-Use the **Web Terminal** (`>_`) as **cluster admin**.
+In Lab 0, we installed the meta-operator and all the necessary infrastructure operators (NFD, GPU, Kueue, cert-manager, Connectivity Link, and Leader Worker Set). However, if you look at your cluster right now, the Red Hat OpenShift AI (RHOAI) meta-operator is sitting entirely idle. 
 
-== 1. Red Hat OpenShift AI operator
+This is by design. The meta-operator acts as a factory manager waiting for your blueprint. You must declare **which** RHOAI subsystems should be activated. This is how you keep idle controllers from nibbling RAM and CPU in multi-tenant clusters.
 
-The meta-operator owns reconciliation for RHOAI components once a `DataScienceCluster` exists.
+== 1. The Strategy: Selective Activation
 
-=== Apply manifests
+The Golden Rule of Platform Engineering applies here: **Provision against outcomes.** Do not turn every dial to "Managed." For our **Models-as-a-Service (MaaS)** factory path, we will use selective activation:
 
-Adjust **channel** if your documentation specifies a different `stable-3.x` mapping for your minor release.
+* **Dashboard** — `Managed` (Provides the Model Catalog and user interface).
+* **Model Registry** — `Managed` (With a dedicated `rhoai-model-registries` namespace to act as your AI "Title Office").
+* **KServe** — `Managed` (The core serving infrastructure for large models).
+* **Models-as-a-Service (MaaS)** — `Managed` (Deploys the MaaS API, creates default service tiers, and sets up RBAC roles for access control).
+* **Kueue** — `Managed` (Controls resource allocation and queue management for AI workloads).
+* **Unused Components** — `Removed` (We will explicitly disable legacy ModelMesh, Ray, Codebases, and TrustyAI for this specific foundation phase to reduce reconciliation overhead and attack surface).
+
+[WARNING]
+.Schema Evolution Reality Check
+====
+The `DataScienceCluster` schema **changes between releases**. In RHOAI 3.3, the API version is `v2`. If an apply fails with unknown fields during future upgrades, run `oc explain datasciencecluster.spec` on your cluster and reconcile your manifest with the installed CRD.
+====
+
+== 2. Understanding the Kueue Configuration
+
+Because we are building a factory that shares expensive GPU resources, queuing and quota management are critical. In our blueprint below, we are adding two specific configurations for Kueue:
+
+* `spec.components.kueue.managementState: Managed` 
+** **What this does:** This tells the RHOAI meta-operator to actively deploy, configure, and manage the lifecycle of the Kueue integration components specific to OpenShift AI. Instead of forcing you to manually configure default `ClusterQueue` and `LocalQueue` objects, the meta-operator wires these up automatically so your data scientists can submit distributed workloads immediately.
+* `spec.dashboardConfig.disableKueue: false`
+** **What this does:** This toggle directly controls the user interface. Setting it to `false` *enables* the Kueue-related UI elements within the OpenShift AI Dashboard. This exposes hardware profiles, quota management, and workload tracking directly to your users, bridging the gap between the backend scheduling engine and the frontend data science experience.
+
+== 3. Applying the Blueprint
+
+We will use our Web Terminal to apply the `DataScienceCluster` Custom Resource. 
+
+In the `spec.components` section, setting a field to `Managed` tells the Operator to actively install and manage the component. Setting it to `Removed` tells the Operator to actively manage the component by ensuring it is *not* installed.
+
+Copy and paste the following into your authenticated Web Terminal:
 
 [source,bash]
 ----
 cat <<EOF | oc apply -f -
-apiVersion: v1
-kind: Namespace
+apiVersion: datasciencecluster.opendatahub.io/v2
+kind: DataScienceCluster
 metadata:
-  name: redhat-ods-operator
----
-apiVersion: operators.coreos.com/v1
-kind: OperatorGroup
-metadata:
-  name: rhods-operator
-  namespace: redhat-ods-operator
+  name: default-dsc
 spec:
-  targetNamespaces:
-  - redhat-ods-operator
----
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  name: rhods-operator
-  namespace: redhat-ods-operator
-spec:
-  name: rhods-operator
-  channel: stable-3.x
-  source: redhat-operators
-  sourceNamespace: openshift-marketplace
+  dashboardConfig:
+    disableKueue: false
+  components:
+    dashboard:
+      managementState: Managed
+    modelregistry:
+      managementState: Managed
+      registriesNamespace: rhoai-model-registries
+    kserve:
+      managementState: Managed
+      serving:
+        managementState: Managed
+        name: knative-serving
+    modelsAsService:
+      managementState: Managed
+    kueue:
+      managementState: Managed
+      defaultClusterQueueName: default
+      defaultLocalQueueName: default
+    modelmeshserving:
+      managementState: Removed
+    codebases:
+      managementState: Removed
+    ray:
+      managementState: Removed
+    trustyai:
+      managementState: Removed
 EOF
 ----
 
-=== Verify CSV
+
+
+== 4. Verification & Validation
+
+Applying the CR is instantaneous, but the meta-operator needs time to orchestrate the deployment of these subsystems across your namespaces.
+
+=== Check the DSC Phase
+
+Run the following command to check the top-level status of the DataScienceCluster:
 
 [source,bash]
 ----
-oc get csv -n redhat-ods-operator
+oc get datasciencecluster default-dsc -o jsonpath='{.status.phase}{"\n"}'
 ----
 
-**Value:** At this stage the operator is **armed** but waiting on xref:lab3-dsc.adoc[Lab 3 — DataScienceCluster] to materialize the factory UI and serving controllers.
+**Target:** `Ready`. (Note: During the initial installation, it might take several minutes for the status phase to change from `Progressing` to `Ready`).
 
-== 2. Node Feature Discovery (NFD)
+=== Check the Component Pods
 
-GPUs you cannot **label** are GPUs you cannot **schedule** reliably.
-
-=== Install operator
+Confirm that the meta-operator has successfully spun up the pods for your activated components in the `redhat-ods-applications` namespace:
 
 [source,bash]
 ----
-cat <<EOF | oc apply -f -
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: openshift-nfd
+oc get pods -n redhat-ods-applications
+----
+
+You should see running pods for `rhods-dashboard`, `kserve-controller-manager`, Kueue controllers, and the various MaaS controllers.
+
+=== Access the Dashboard
+
+RHOAI commonly exposes the user experience via a gateway-style route. Let's fetch the route to your newly minted AI Factory floor:
+
+[source,bash]
+----
+oc get route -n redhat-ods-applications | grep rhods-dashboard
+----
+
+Open that URL in your browser. Log in with your OpenShift credentials, and confirm that the navigation menu displays the **Model Catalog**, **Model Registry**, and Kueue-backed **Hardware Profiles** options.
+
 ---
-apiVersion: operators.coreos.com/v1
-kind: OperatorGroup
-metadata:
-  name: openshift-nfd
-  namespace: openshift-nfd
-spec:
-  targetNamespaces:
-  - openshift-nfd
----
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  name: nfd
-  namespace: openshift-nfd
-spec:
-  channel: stable
-  name: nfd
-  source: redhat-operators
-  sourceNamespace: openshift-marketplace
-EOF
-----
-
-=== Create NodeFeatureDiscovery CR
-
-[IMPORTANT]
-====
-The operand image **must** match your OpenShift version family. Replace the image reference below with the value from current NFD documentation if this example lags your cluster.
-====
-
-[source,bash]
-----
-cat <<EOF | oc apply -f -
-apiVersion: nfd.openshift.io/v1
-kind: NodeFeatureDiscovery
-metadata:
-  name: nfd-instance
-  namespace: openshift-nfd
-spec:
-  operand:
-    image: registry.redhat.io/openshift4/ose-node-feature-discovery:v4.14
-  workerConfig:
-    configData: |
-      core:
-        sleepInterval: 60s
-EOF
-----
-
-=== Verify workers
-
-[source,bash]
-----
-oc get pods -n openshift-nfd -l app=nfd-worker
-----
-
-== Optional — console verification
-
-[NOTE]
-.Simulation placeholder
-====
-Replace iframe URL when your Arcade asset is ready.
-====
-
-++++
-<iframe src="[INSERT_ARCADE_VERIFY_OPERATORS_URL_ASYNC]" width="100%" height="500px" frameborder="0" allowfullscreen webkitallowfullscreen mozallowfullscreen allow="clipboard-write" muted> </iframe>
-++++
-
-== Next step
-
-xref:lab2-governance.adoc[Lab 2 — cert-manager & Connectivity Link].

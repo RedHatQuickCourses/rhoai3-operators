@@ -1,77 +1,104 @@
-= Lab 2 — Deploying governance dependencies
-:navtitle: Lab 2 — TLS & gateway policy
+= Lab 2 — Configuring Hardware Profiles & Accelerators
+:navtitle: Lab 2 — Hardware Profiles
 :toc: macro
-
 :page-role: hands-on-lab
-:description: Install cert-manager and Red Hat Connectivity Link to prepare secure KServe-style serving and MaaS gateway policy paths.
+:description: Bridge the gap between the infrastructure execution plane and the data scientist user experience by configuring Hardware Profiles.
 
 [.lead]
-*An unmanaged endpoint is a liability. A governed endpoint is a product.*
+*Your GPUs are online, but your data scientists cannot see them. It is time to connect the factory floor to the storefront.*
 
-Lab 1 gave you the **meta-operator** and **hardware truth**. Before inference traffic should flow, install the **TLS factory** and the **policy plane** the journey expects for Phase 2–3.
+In Lab 0, we deployed the Node Feature Discovery (NFD) and NVIDIA GPU operators. In Lab 1, we activated the core AI factory subsystems. At this point, your OpenShift cluster is fully aware of its hardware acceleration capabilities. However, your data scientists are not Kubernetes engineers—they should not be writing `nodeSelectors` or `tolerations` manually to schedule a model training job.
 
-== 1. cert-manager (OpenShift operator)
+We bridge this gap using **Hardware Profiles**. A Hardware Profile acts as a product catalog entry, translating complex Kubernetes scheduling constraints into a simple, user-friendly dropdown menu in the OpenShift AI Dashboard.
 
-KServe-oriented stacks commonly depend on in-cluster certificate issuance—avoid one-off TLS secrets.
+[IMPORTANT]
+.Technology Preview Notice
+====
+The hardware profiles feature is currently available in Red Hat OpenShift AI 3.3 as a Technology Preview feature. Technology Preview features provide early access to upcoming product features , but are not recommended for production environments requiring strict Red Hat SLAs. 
+====
+
+== 1. The Strategy: Hiding the Infrastructure
+
+When a data scientist requests a GPU for a workbench or a model deployment, the underlying pod must contain specific `resources.limits` and `tolerations` to ensure it lands on a node with the physical hardware. 
+
+If you force users to manually inject:
+`nvidia.com/gpu: 1` and `tolerations: nvidia.com/gpu:NoSchedule`
+...you will spend your entire week debugging pending pods due to typographical errors. 
+
+By defining a `HardwareProfile` Custom Resource (CR) as the platform engineer, you encode these rules once. 
+
+== 2. Verify Accelerator Detection
+
+Before we create the profile, let's mathematically prove the Operator layer did its job. We need to ensure the cluster actually recognizes the allocatable GPU capacity.
+
+In your Web Terminal, check a specific GPU-enabled worker node:
+
+[source,bash]
+----
+# Expected output when the accelerator is detected correctly
+oc describe node <your-gpu-node-name> | grep -A 5 "Allocatable:"
+----
+
+You must see the accelerator listed under the allocatable resources, for example:
+`nvidia.com/gpu: 1`.
+
+If this reads `0` or is missing, your NVIDIA GPU Operator `ClusterPolicy` from Lab 0 has not finished reconciling, or NFD failed to label the node. Do not proceed until you have allocatable GPU capacity.
+
+== 3. Applying the Hardware Profile Blueprint
+
+We will use our declarative, GitOps-friendly approach to create a standard NVIDIA GPU profile. 
+
+Copy and paste the following into your authenticated Web Terminal. This manifest creates a profile that automatically injects the exact identifiers and tolerations required by the NVIDIA GPU Operator into any workload that selects it:
 
 [source,bash]
 ----
 cat <<EOF | oc apply -f -
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
+apiVersion: dashboard.opendatahub.io/v1alpha1
+kind: HardwareProfile
 metadata:
-  name: openshift-cert-manager-operator
-  namespace: cert-manager-operator
+  name: nvidia-gpu-standard
+  namespace: redhat-ods-applications
 spec:
-  channel: stable-v1
-  name: openshift-cert-manager-operator
-  source: redhat-operators
-  sourceNamespace: openshift-marketplace
+  displayName: "Standard NVIDIA GPU"
+  description: "Allocates 1 NVIDIA GPU for compute-intensive workloads and model serving."
+  enabled: true
+  identifiers:
+    - identifier: nvidia.com/gpu
+      displayName: NVIDIA GPU
+      minCount: 1
+      maxCount: 4
+      defaultCount: 1
+  tolerations:
+    - effect: NoSchedule
+      key: nvidia.com/gpu
+      operator: Exists
 EOF
 ----
 
-**ROI link:** No cert-manager → serving reconciliation stalls or runs insecure-by-exception—both are expensive conversations with security teams.
 
-== 2. Red Hat Connectivity Link
 
-Installs the **Kuadrant**-oriented connectivity layer used with **Gateway API** patterns for governed MaaS exposure (confirm feature maturity in release notes).
+== 4. Verification & Validation
 
-[source,bash]
-----
-cat <<EOF | oc apply -f -
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  name: connectivity-link-operator
-  namespace: openshift-operators
-spec:
-  channel: stable-v1
-  name: connectivity-link-operator
-  source: redhat-operators
-  sourceNamespace: openshift-marketplace
-EOF
-----
+Let's verify that the catalog item is now available for your tenants.
 
-== 3. Verification
+=== Step A: Check the Custom Resource
+Confirm the cluster accepted the profile:
 
 [source,bash]
 ----
-oc get csv -n cert-manager-operator | grep cert-manager
-oc get csv -n openshift-operators | grep connectivity-link
+oc get hardwareprofiles -n redhat-ods-applications
 ----
+Expect to see `nvidia-gpu-standard` listed.
 
-Expect **Succeeded** for both.
+=== Step B: Verify the User Experience
+1. Open the OpenShift AI Dashboard in your browser.
+2. Navigate to **Settings** → **Hardware profiles** to view the active catalog.
+3. To test the execution path, navigate to **Projects** → **Create workbench**].
+4. Scroll down to the **Deployment size** section.
+5. You will now see a **Hardware profile** list. Open it and confirm that **Standard NVIDIA GPU** is available for selection.
 
-[NOTE]
-.Simulation placeholder
-====
-Replace iframe URL when ready.
-====
+By selecting this profile, the user's workbench pod will automatically request the `nvidia.com/gpu` limits and tolerate the GPU node taints. The factory floor is now officially connected to the storefront.
 
-++++
-<iframe src="[INSERT_ARCADE_VERIFY_GOV_OPERATORS_URL_ASYNC]" width="100%" height="500px" frameborder="0" allowfullscreen webkitallowfullscreen mozallowfullscreen allow="clipboard-write" muted> </iframe>
-++++
+---
 
-== Next step
-
-Activate operands via xref:lab3-dsc.adoc[Lab 3 — DataScienceCluster].
+Whenever you are ready, we can proceed to **Lab 3: Serving Runtimes & TLS Integrations**, where we will ensure our factory can securely host and scale large models using KServe and the `cert-manager` foundation we laid earlier.

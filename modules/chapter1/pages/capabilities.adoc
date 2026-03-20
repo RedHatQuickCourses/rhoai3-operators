@@ -1,76 +1,74 @@
-= Capabilities & features — what the ecosystem gives you
-:navtitle: Capabilities & features
+= Architecting the Operator Foundation
+:navtitle: The AI Factory Roster
 :toc: macro
-
-:page-role: product-concept
-:description: High-level menu of OpenShift Operator Lifecycle Manager, the OpenShift AI meta-operator, DataScienceCluster components, and adjacent operators used in the industrialized AI factory.
+:page-role: architecture-concept
+:description: Outline all the operators installed to support RHOAI 3.3 features, providing the base knowledge for platform engineering decision-making.
 
 [.lead]
-*This page is the menu, not the meal.* You are choosing **control-plane services** that make the **execution plane** (GPUs, serving pods, gateways) predictable, shared, and measurable.
+*This page is the menu, not the meal. You are choosing control-plane services that make the execution plane (GPUs, serving pods, gateways) predictable, shared, and measurable.*
 
-The table below is the **platform engineer's feature list**: what each layer *does* for ROI (shared capacity, shorter TTFT, fewer outages) without naming every CRD.
+To build a generative AI application platform that provides AI Model Inference at Scale using Models-as-a-Service (MaaS), you need a specific combination of infrastructure, serving, and governance operators. Provisioning every operator in the catalog is an anti-pattern: you pay in CPU, memory, reconciliation storms, and upgrade risk. Instead, we provision against specific factory outcomes.
+
+Here is the roster of operators required to build your industrialized AI token platform.
+
+== 1. Core & Infrastructure Operators (The Factory Floor)
+
+These operators provide the foundational hardware detection and acceleration required for generative AI at scale. 
+
+* **Red Hat OpenShift AI Operator:** The core meta-operator that manages the entire AI lifecycle platform. It deploys and maintains all components and sub-operators that are part of OpenShift AI. It acts as a factory manager waiting for a `DataScienceCluster` custom resource. To enable the MaaS architecture, you must install version 3.4 or later.
+* **Node Feature Discovery (NFD) Operator:** Publishes hardware labels on nodes, such as CPU flags, PCI devices, and accelerators. This ensures GPU operators and schedulers see the same truth, meaning placement and profiles stop being guesswork.
+* **Hardware Accelerator Operators:** Depending on your infrastructure, you must install the specific operator to manage the drivers and device plugins for your hardware. Supported options include the NVIDIA GPU Operator, AMD GPU Operator, Intel Gaudi Base Operator, or IBM Spyre Operator. This allows for higher utilization per dollar by sharing slices instead of dedicating one model per card.
+
+== 2. Operators for Inference at Scale & MaaS (The Production Lines)
+
+To deliver Large Language Models (LLMs) as a governed, shared resource across your enterprise, you must install the following operators to handle networking, security, and distributed serving.
+
+* **Red Hat Connectivity Link Operator:** This is critical for MaaS. It provides Kuadrant-style policy attachment, authN/Z hooks, and rate limits on ingress to models. This turns raw endpoints into products with SLAs—internal MaaS without anonymous GPU burn.
+* **Leader Worker Set Operator:** An orchestration primitive for leader/worker distributed pods, which is used by distributed inference patterns. It lets very large models span devices and nodes instead of forcing vertical-only designs.
+* **cert-manager Operator:** Provides issuers, certificates, and renewals for in-cluster TLS consumers, such as serving stacks. It eliminates manual cert rotation theater before inference goes live.
+
+[NOTE]
+.Architectural Reality Check for Distributed Inference
+
+To deploy models by using Distributed Inference with the `llm-d` runtime, your cluster must be running OpenShift Container Platform version 4.20 or later. You must also have the cert-manager Operator, Red Hat Connectivity Link Operator, and Red Hat Leader Worker Set Operator installed. 
+
+
+== 3. Operators for Distributed Workloads & RAG (Heavy Machinery)
+
+If your generative AI platform requires advanced workload queuing or Retrieval-Augmented Generation (RAG), you will also use:
+
+* **Red Hat build of Kueue Operator:** Controls quotas, priorities, and preemption policies for batch and serving workloads. It stops queue sprawl and aligns compute spend with business priority, not just the loudest team.
+* **Llama Stack Operator:** Data scientists and AI engineers can leverage Retrieval-Augmented Generation (RAG) capabilities provided by the integrated Llama Stack Operator. By combining large language model inference, semantic retrieval, and vector database storage, teams can obtain tailored, accurate, and verifiable answers to complex queries based on their own datasets.
+* **Observability Operators:** The Cluster Observability Operator, Tempo Operator, and Red Hat build of OpenTelemetry deploy an observability stack.
+
+== The Platform Engineer's Decision Matrix
 
 [cols="1,2,2", options="header"]
 |===
-| Layer | What you get | Factory outcome
-
-| **OLM / Catalog sources**
-| Subscriptions, channels, install plans, CSV health, dependency edges between operators
-| Repeatable installs, audited upgrades, fewer "works on my laptop" clusters
-
-| **Red Hat OpenShift AI operator (meta-operator)**
-| Watches `DataScienceCluster`; reconciles dashboard, registry, serving stacks, and optional components per policy
-| One declarative object (`DSC`) expresses *intent* instead of twenty Helm charts
-
-| **DataScienceCluster (`DSC`)**
-| Per-component `managementState` (`Managed`, `Removed`, …) for dashboard, model registry, KServe, Ray, Codebases, legacy ModelMesh, etc.
-| You **pay RAM/CPU only for the factory you are actually running**—critical for multi-tenant cost allocation
+| Operator Layer | What you get | Factory outcome
 
 | **Node Feature Discovery (NFD)**
-| Publishes hardware labels (CPU flags, PCI devices, accelerators) on nodes
-| GPU operators and schedulers **see** the same truth; placement and profiles stop being guesswork
+| Publishes hardware labels (CPU flags, PCI devices, accelerators) on nodes .
+| GPU operators and schedulers see the same truth; placement and profiles stop being guesswork.
 
-| **GPU vendor operators**
-| Drivers, device plugins, MIG/MxGPU-style partitioning where supported
-| Higher **utilization** per dollar—shared slices instead of one model per card
+| **cert-manager**
+| Issuers, certificates, renewals for in-cluster TLS consumers.
+| Eliminates manual cert rotation theater before inference goes live.
 
-| **Kueue (Red Hat build)**
-| Quotas, priorities, preemption policies for batch and serving workloads
-| Stops queue sprawl; aligns spend with **business priority**, not loudest team
-
-| **cert-manager (OpenShift operator)**
-| Issuers, certificates, renewals for in-cluster TLS consumers (e.g., serving stacks)
-| Eliminates manual cert rotation theater before inference goes live
-
-| **Connectivity Link + Gateway API path**
-| Kuadrant-style policy attachment, authN/Z hooks, rate limits on ingress to models
-| Turns raw endpoints into **products** with SLAs—internal MaaS without anonymous GPU burn
+| **Connectivity Link**
+| Kuadrant-style policy attachment, authN/Z hooks, rate limits on ingress to models.
+| Turns raw endpoints into products with SLAs—internal MaaS without anonymous GPU burn.
 
 | **Leader Worker Set**
-| Orchestration primitive for leader/worker distributed pods (used by distributed inference patterns)
-| Lets very large models **span** devices/nodes instead of forcing vertical-only designs
+| Orchestration primitive for leader/worker distributed pods.
+| Lets very large models span devices/nodes instead of forcing vertical-only designs.
+
+| **Kueue (Red Hat build)**
+| Quotas, priorities, preemption policies for batch and serving workloads.
+| Stops queue sprawl; aligns spend with business priority, not loudest team.
 |===
 
-[WARNING]
+[IMPORTANT]
 ====
-**Technology Preview truth:** MaaS, some gateway integrations, and preview operators change fastest. Before you promise the business a capability, match the **Release notes** and **Installing OpenShift AI** guide for your exact 3.3 build.
+**MaaS Configuration Target:** To optimally configure your generative AI platform to serve models at scale using MaaS, you will eventually set `modelsAsService` to `Managed` in your `DataScienceCluster` to deploy the MaaS API and RBAC roles. You will also set the `kserve` component to `Managed` to provide the underlying model serving infrastructure.
 ====
-
-[#further-reading]
-== Further reading (RHOAI 3.3 documentation set)
-
-Official PDF titles in the local documentation bundle (folder `rhoai33docs` beside this course in a typical checkout layout) that align with this module:
-
-* *Red Hat OpenShift AI Self-Managed 3.3 — Installing and uninstalling OpenShift AI Self-Managed*
-* *Red Hat OpenShift AI Self-Managed 3.3 — Managing OpenShift AI*
-* *Red Hat OpenShift AI Self-Managed 3.3 — Configuring your model-serving platform*
-* *Red Hat OpenShift AI Self-Managed 3.3 — Working with accelerators*
-* *Red Hat OpenShift AI Self-Managed 3.3 — Working with distributed workloads*
-* *Red Hat OpenShift AI Self-Managed 3.3 — Govern LLM access with Models-as-a-Service*
-* *Red Hat OpenShift AI Self-Managed 3.3 — Getting started with Red Hat OpenShift AI Self-Managed*
-
-Use these as the source of truth for channel names, required dependencies, and feature maturity.
-
-== Next step
-
-Understand *how* installs compose: xref:architecture.adoc[Architecture & data flow].
