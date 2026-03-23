@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Operators &amp; Ecosystem :: OpenShift Ecosystem &amp; RHOAI 3x Control Plane</title>
+    <meta name="description" content="Understanding how OpenShift AI 3.3 operators map to the token production lifecycle, from physical hardware discovery to Models-as-a-Service governance.">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article architecture-concept">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Ecosystem &amp; RHOAI 3x Control Plane</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/rhoai3-operators/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="rhoai3-operators" data-version="3.3">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Ecosystem &amp; RHOAI 3x Control Plane</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../chapter1/architecture.html">Architecture &amp; data flow</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../chapter1/lab0-command-center.html">Lab 0 — Command center</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../chapter1/lab1-foundation.html">Lab 1 — Core &amp; hardware discovery</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../chapter1/lab2-governance.html">Lab 2 — Governance dependencies</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../chapter1/lab3-dsc.html">Lab 3 — DataScienceCluster</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../chapter1/summary.html">Summary &amp; troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Ecosystem &amp; RHOAI 3x Control Plane</span>
+    <span class="version">3.3</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Ecosystem & RHOAI 3x Control Plane</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">3.3</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Ecosystem & RHOAI 3x Control Plane</a></li>
+    <li><a href="architecture.html">Operators &amp; Ecosystem</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Operators &amp; Ecosystem</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph lead">
+<p><strong>Your business mandate is to flip that narrative: to move from consuming tokens to producing them at scale.</strong></p>
+</div>
+<div class="paragraph">
+<p>To successfully build and troubleshoot this AI Factory, a Platform Engineer must understand the underlying ecosystem. Deploying every operator in the catalog is an anti-pattern: you pay in CPU, memory, reconciliation storms, and upgrade risks. Instead, we provision strictly against our factory outcomes.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_1_the_meta_operator_namespace_isolation"><a class="anchor" href="#_1_the_meta_operator_namespace_isolation"></a>1. The Meta-Operator &amp; Namespace Isolation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>A common misconception is that installing the OpenShift AI operator immediately spins up your entire factory. Instead, it relies on the <strong>Operator Lifecycle Manager (OLM)</strong> and a <strong>Meta-Operator Pattern</strong>.</p>
+</div>
+<div class="paragraph">
+<p>When installed, the Red Hat OpenShift AI Operator acts as the factory manager. It waits for you to define your <code>DataScienceCluster</code> custom resource (which we will do in Lab 3), and then it orchestrates the deployment of specific components across isolated namespaces.</p>
+</div>
+<div class="paragraph">
+<p>Familiarize yourself with these namespaces, as you will spend a lot of time troubleshooting within them:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong><code>redhat-ods-operator</code></strong>: The control room. Where the meta-operator itself lives and runs its reconciliation loops.</p>
+</li>
+<li>
+<p><strong><code>redhat-ods-applications</code></strong>: The factory floor. Where the core UI, dashboard components, and Model Catalog run.</p>
+</li>
+<li>
+<p><strong><code>rhoai-model-registries</code></strong>: The isolated namespace specifically targeted for the Model Registry components (think of this as your AI "Title Office").</p>
+</li>
+<li>
+<p><strong><code>rhods-notebooks</code></strong>: The R&amp;D lab. Where standard data science workbenches are deployed by default.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_2_the_dependency_rules_why_order_matters"><a class="anchor" href="#_2_the_dependency_rules_why_order_matters"></a>2. The Dependency Rules: Why Order Matters</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Generative AI at scale is a highly complex compound system. You cannot install components out of order and expect the factory to run. The following dependency chain dictates our installation progression:</p>
+</div>
+<div class="sect2">
+<h3 id="_hardware_labels_before_hardware_allocation"><a class="anchor" href="#_hardware_labels_before_hardware_allocation"></a>Hardware Labels before Hardware Allocation</h3>
+<div class="paragraph">
+<p>GPUs you cannot label are GPUs you cannot schedule reliably. You must install <strong>Node Feature Discovery (NFD)</strong> to publish hardware labels (CPU flags, PCI devices, accelerators) on nodes. Only once NFD has detected the hardware can the GPU operators properly attach drivers so Kubernetes can schedule <code>resources.limits</code> on GPUs.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_trust_before_traffic"><a class="anchor" href="#_trust_before_traffic"></a>Trust before Traffic</h3>
+<div class="paragraph">
+<p>Unsecured inference endpoints are a liability. KServe-oriented stacks commonly depend on in-cluster certificate issuance. The <strong>cert-manager Operator</strong> must be installed <strong>before</strong> the OpenShift AI operator to eliminate manual certificate rotation theater.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_gateways_before_governed_exposure"><a class="anchor" href="#_gateways_before_governed_exposure"></a>Gateways before Governed Exposure</h3>
+<div class="paragraph">
+<p>An unmanaged endpoint is a liability; a governed endpoint is a product. To enable Models-as-a-Service (MaaS) with strict authentication and rate-limiting, the gateway infrastructure must be present.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="title">The Evolution of Auth: Authorino vs. Connectivity Link</div>
+<div class="paragraph">
+<p>If you deployed older 2.x environments, you likely installed the Authorino Operator directly. For OpenShift AI 3.3 and the new Gateway API MaaS patterns, the <strong>Red Hat Connectivity Link Operator</strong> is your unified gateway manager. It installs the Kuadrant-oriented connectivity layer, handling the underlying authentication (JWT validation) and rate-limiting policies previously managed by standalone Authorino deployments.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_3_the_platform_engineers_decision_matrix"><a class="anchor" href="#_3_the_platform_engineers_decision_matrix"></a>3. The Platform Engineer&#8217;s Decision Matrix</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Use the following matrices to understand exactly which operators unlock which capabilities in our journey. We have structured this into the exact order you should deploy them.</p>
+</div>
+<div class="sect2">
+<h3 id="_a_the_core_pre_requisites_install_first"><a class="anchor" href="#_a_the_core_pre_requisites_install_first"></a>A: The Core Pre-requisites (Install First)</h3>
+<div class="paragraph">
+<p>These operators lay the foundation. They must be present and healthy before the OpenShift AI meta-operator is installed.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Operator</th>
+<th class="tableblock halign-left valign-top">What it does</th>
+<th class="tableblock halign-left valign-top">Factory Outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Node Feature Discovery (NFD)</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Scans the cluster and publishes hardware labels on nodes.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GPU operators and schedulers see the same truth. Hardware placement stops being guesswork.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>cert-manager</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Provides issuers, certificates, and renewals for in-cluster TLS consumers.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Strict Prerequisite:</strong> Secures KServe and distributed workloads. Eliminates manual cert rotation.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Hardware Accelerator Operator</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Manages drivers and device plugins for your specific hardware.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Enables GPU-as-a-Service. <strong>For this use case, we will use the <strong>NVIDIA GPU Operator</strong>.</strong> (Alternatives: AMD GPU, Intel Gaudi Base, or IBM Spyre Operators).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Red Hat build of Kueue</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Controls quotas, priorities, and preemption policies.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Strict Prerequisite for Hardware Profiles.</strong> Stops queue sprawl and aligns compute spend with business priority.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_b_the_meta_operator_automated_subsystems"><a class="anchor" href="#_b_the_meta_operator_automated_subsystems"></a>B: The Meta-Operator &amp; Automated Subsystems</h3>
+<div class="paragraph">
+<p>Once the concrete is poured, we install the factory manager.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Operator</th>
+<th class="tableblock halign-left valign-top">What it does</th>
+<th class="tableblock halign-left valign-top">Factory Outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Red Hat OpenShift AI Operator</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The core meta-operator that manages the entire AI lifecycle platform.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Waits for your <code>DataScienceCluster</code> blueprint to deploy the dashboard, model registry, and serving controllers. (Requires v3.3+ for MaaS).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Service Mesh 3 Operator</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Manages pod-to-pod encrypted traffic, telemetry, and tracing.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Auto-Managed:</strong> In v3.3, the OpenShift AI operator automatically handles the installation/integration of Service Mesh 3 when required by components like the Llama Stack.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_c_inference_at_scale_maas_scale_out_machinery"><a class="anchor" href="#_c_inference_at_scale_maas_scale_out_machinery"></a>C: Inference at Scale &amp; MaaS (Scale-Out Machinery)</h3>
+<div class="paragraph">
+<p>To deliver Large Language Models (LLMs) as a governed, shared resource across your enterprise, these operators handle distributed serving and external access.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Operator</th>
+<th class="tableblock halign-left valign-top">What it does</th>
+<th class="tableblock halign-left valign-top">Factory Outcome</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Red Hat Connectivity Link</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Provides Kuadrant-style policy attachment, authN/Z hooks, and rate limits on ingress.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Turns raw endpoints into products with SLAs—internal MaaS without anonymous GPU burn.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Leader Worker Set</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Orchestration primitive for leader/worker distributed pods.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Required for <strong>Distributed Inference (<code>llm-d</code>)</strong>. Lets very large models span devices and nodes instead of forcing vertical-only designs.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="title">MaaS Configuration Target</div>
+<div class="paragraph">
+<p>Operators and this foundation are critical; they make the difference between a feature working and failing silently. To optimally configure your generative AI platform for MaaS, you will eventually set <code>modelsAsService</code> to <code>Managed</code> and <code>kserve</code> to <code>Managed</code> in your <code>DataScienceCluster</code> custom resource. <strong>Do not attempt this until the roster above is successfully running.</strong></p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_next_step"><a class="anchor" href="#_next_step"></a>Next Step</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Now that you understand the blueprints, the required namespaces, and the strict dependency chains, it is time to open your command center and start applying manifests.</p>
+</div>
+<div class="paragraph">
+<p>Proceed to <strong>Lab 0: CLI-Driven Setup (The Command Center)</strong> to begin the installation.</p>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

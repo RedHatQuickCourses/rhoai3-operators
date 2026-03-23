@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Lab 1 — Activating the AI Factory (DataScienceCluster) :: OpenShift Ecosystem &amp; RHOAI 3x Control Plane</title>
+    <meta name="description" content="Configure the DataScienceCluster custom resource to enable the dashboard, model registry, KServe, Kueue, and MaaS APIs while removing unused components.">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article hands-on-lab">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Ecosystem &amp; RHOAI 3x Control Plane</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/rhoai3-operators/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="rhoai3-operators" data-version="3.3">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Ecosystem &amp; RHOAI 3x Control Plane</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../chapter1/architecture.html">Architecture &amp; data flow</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../chapter1/lab0-command-center.html">Lab 0 — Command center</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../chapter1/lab1-foundation.html">Lab 1 — Core &amp; hardware discovery</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../chapter1/lab2-governance.html">Lab 2 — Governance dependencies</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../chapter1/lab3-dsc.html">Lab 3 — DataScienceCluster</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../chapter1/summary.html">Summary &amp; troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Ecosystem &amp; RHOAI 3x Control Plane</span>
+    <span class="version">3.3</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Ecosystem & RHOAI 3x Control Plane</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">3.3</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Ecosystem & RHOAI 3x Control Plane</a></li>
+    <li><a href="lab1-foundation.html">Lab 1 — Activating the AI Factory (DataScienceCluster)</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Lab 1 — Activating the AI Factory (DataScienceCluster)</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph lead">
+<p><strong>Operators provide the potential. The <code>DataScienceCluster</code> provides your <strong>intent</strong>.</strong></p>
+</div>
+<div class="paragraph">
+<p>In Lab 0, we installed the meta-operator and all the necessary infrastructure operators (NFD, GPU, Kueue, cert-manager, Connectivity Link, and Leader Worker Set). However, if you look at your cluster right now, the Red Hat OpenShift AI (RHOAI) meta-operator is sitting entirely idle.</p>
+</div>
+<div class="paragraph">
+<p>This is by design. The meta-operator acts as a factory manager waiting for your blueprint. You must declare <strong>which</strong> RHOAI subsystems should be activated. This is how you keep idle controllers from nibbling RAM and CPU in multi-tenant clusters.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_1_the_strategy_selective_activation"><a class="anchor" href="#_1_the_strategy_selective_activation"></a>1. The Strategy: Selective Activation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The Golden Rule of Platform Engineering applies here: <strong>Provision against outcomes.</strong> Do not turn every dial to "Managed." For our <strong>Models-as-a-Service (MaaS)</strong> factory path, we will use selective activation:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Dashboard</strong> — <code>Managed</code> (Provides the Model Catalog and user interface).</p>
+</li>
+<li>
+<p><strong>Model Registry</strong> — <code>Managed</code> (With a dedicated <code>rhoai-model-registries</code> namespace to act as your AI "Title Office").</p>
+</li>
+<li>
+<p><strong>KServe</strong> — <code>Managed</code> (The core serving infrastructure for large models).</p>
+</li>
+<li>
+<p><strong>Models-as-a-Service (MaaS)</strong> — <code>Managed</code> (Deploys the MaaS API, creates default service tiers, and sets up RBAC roles for access control).</p>
+</li>
+<li>
+<p><strong>Kueue</strong> — <code>Managed</code> (Controls resource allocation and queue management for AI workloads).</p>
+</li>
+<li>
+<p><strong>Unused Components</strong> — <code>Removed</code> (We will explicitly disable legacy ModelMesh, Ray, Codebases, and TrustyAI for this specific foundation phase to reduce reconciliation overhead and attack surface).</p>
+</li>
+</ul>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="title">Schema Evolution Reality Check</div>
+<div class="paragraph">
+<p>The <code>DataScienceCluster</code> schema <strong>changes between releases</strong>. In RHOAI 3.3, the API version is <code>v2</code>. If an apply fails with unknown fields during future upgrades, run <code>oc explain datasciencecluster.spec</code> on your cluster and reconcile your manifest with the installed CRD.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_2_understanding_the_kueue_configuration"><a class="anchor" href="#_2_understanding_the_kueue_configuration"></a>2. Understanding the Kueue Configuration</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Because we are building a factory that shares expensive GPU resources, queuing and quota management are critical. In our blueprint below, we are adding two specific configurations for Kueue:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>spec.components.kueue.managementState: Managed</code></p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>What this does:</strong> This tells the RHOAI meta-operator to actively deploy, configure, and manage the lifecycle of the Kueue integration components specific to OpenShift AI. Instead of forcing you to manually configure default <code>ClusterQueue</code> and <code>LocalQueue</code> objects, the meta-operator wires these up automatically so your data scientists can submit distributed workloads immediately.</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><code>spec.dashboardConfig.disableKueue: false</code></p>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>What this does:</strong> This toggle directly controls the user interface. Setting it to <code>false</code> <strong>enables</strong> the Kueue-related UI elements within the OpenShift AI Dashboard. This exposes hardware profiles, quota management, and workload tracking directly to your users, bridging the gap between the backend scheduling engine and the frontend data science experience.</p>
+</li>
+</ul>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_3_applying_the_blueprint"><a class="anchor" href="#_3_applying_the_blueprint"></a>3. Applying the Blueprint</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>We will use our Web Terminal to apply the <code>DataScienceCluster</code> Custom Resource.</p>
+</div>
+<div class="paragraph">
+<p>In the <code>spec.components</code> section, setting a field to <code>Managed</code> tells the Operator to actively install and manage the component. Setting it to <code>Removed</code> tells the Operator to actively manage the component by ensuring it is <strong>not</strong> installed.</p>
+</div>
+<div class="paragraph">
+<p>Copy and paste the following into your authenticated Web Terminal:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt;EOF | oc apply -f -
+apiVersion: datasciencecluster.opendatahub.io/v2
+kind: DataScienceCluster
+metadata:
+  name: default-dsc
+spec:
+  dashboardConfig:
+    disableKueue: false
+  components:
+    dashboard:
+      managementState: Managed
+    modelregistry:
+      managementState: Managed
+      registriesNamespace: rhoai-model-registries
+    kserve:
+      managementState: Managed
+      serving:
+        managementState: Managed
+        name: knative-serving
+    modelsAsService:
+      managementState: Managed
+    kueue:
+      managementState: Managed
+      defaultClusterQueueName: default
+      defaultLocalQueueName: default
+    modelmeshserving:
+      managementState: Removed
+    codebases:
+      managementState: Removed
+    ray:
+      managementState: Removed
+    trustyai:
+      managementState: Removed
+EOF</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_4_verification_validation"><a class="anchor" href="#_4_verification_validation"></a>4. Verification &amp; Validation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Applying the CR is instantaneous, but the meta-operator needs time to orchestrate the deployment of these subsystems across your namespaces.</p>
+</div>
+<div class="sect2">
+<h3 id="_check_the_dsc_phase"><a class="anchor" href="#_check_the_dsc_phase"></a>Check the DSC Phase</h3>
+<div class="paragraph">
+<p>Run the following command to check the top-level status of the DataScienceCluster:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get datasciencecluster default-dsc -o jsonpath='{.status.phase}{"\n"}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Target:</strong> <code>Ready</code>. (Note: During the initial installation, it might take several minutes for the status phase to change from <code>Progressing</code> to <code>Ready</code>).</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_check_the_component_pods"><a class="anchor" href="#_check_the_component_pods"></a>Check the Component Pods</h3>
+<div class="paragraph">
+<p>Confirm that the meta-operator has successfully spun up the pods for your activated components in the <code>redhat-ods-applications</code> namespace:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pods -n redhat-ods-applications</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You should see running pods for <code>rhods-dashboard</code>, <code>kserve-controller-manager</code>, Kueue controllers, and the various MaaS controllers.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_access_the_dashboard"><a class="anchor" href="#_access_the_dashboard"></a>Access the Dashboard</h3>
+<div class="paragraph">
+<p>RHOAI commonly exposes the user experience via a gateway-style route. Let&#8217;s fetch the route to your newly minted AI Factory floor:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get route -n redhat-ods-applications | grep rhods-dashboard</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Open that URL in your browser. Log in with your OpenShift credentials, and confirm that the navigation menu displays the <strong>Model Catalog</strong>, <strong>Model Registry</strong>, and Kueue-backed <strong>Hardware Profiles</strong> options.</p>
+</div>
+<hr>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

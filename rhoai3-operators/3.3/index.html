@@ -108,78 +108,143 @@
 <article class="doc">
 <h1 class="page">OpenShift Ecosystem &amp; RHOAI 3.x Control Plane</h1>
 <div class="sect1">
-<h2 id="_architecting_the_operator_foundation"><a class="anchor" href="#_architecting_the_operator_foundation"></a>Architecting the Operator Foundation</h2>
+<h2 id="_the_operator_ecosystem_for_models_as_a_service"><a class="anchor" href="#_the_operator_ecosystem_for_models_as_a_service"></a>The Operator Ecosystem for Models-as-a-Service</h2>
 <div class="sectionbody">
 <div class="paragraph lead">
-<p><strong>Stop consuming tokens. Start producing them. But first, we need to configure the platform.</strong></p>
+<p><strong>To produce AI tokens at scale, you need automated administrators. Welcome to the engine room.</strong></p>
 </div>
-<div class="paragraph">
-<p>Enterprises default to a <strong>token-consumption</strong> posture: they rent intelligence from the public cloud, absorb unpredictable unit economics, and route sensitive prompts off-prem. Shadow AI makes it worse—ad-hoc clusters, hand-tuned pods, and GPUs purchased as team pets instead of shared, governed capacity. None of that maximizes your <strong>GPU ROI</strong> or shrinks the <strong>time-to-first-token (TTFT)</strong> for the workloads that matter to the business.</p>
-</div>
-<div class="paragraph">
-<p>This course is <strong>Phase 0</strong> of the <strong>Foundations to Scalable AI platform</strong> arc. The modules to follow assume you have a greenfield OpenShift AI 3.3 environment with GPUs.</p>
-</div>
-<div class="paragraph">
-<p>Here, you act as the <strong>platform engineer</strong> who installs only the operators and operands the journey actually needs to build a Generative AI application platform that provides AI Model Inference at Scale using Models-as-a-Service (MaaS).</p>
-</div>
-<hr>
 <div class="sect2">
-<h3 id="_what_is_an_operator_and_why_do_we_care"><a class="anchor" href="#_what_is_an_operator_and_why_do_we_care"></a>What is an Operator? (And why do we care?)</h3>
+<h3 id="_background"><a class="anchor" href="#_background"></a>Background</h3>
 <div class="paragraph">
-<p>An <strong>Operator</strong> is a software extension that uses Custom Resources (CRs) to manage applications and their underlying components. Think of it as an automated Site Reliability Engineer (SRE) encoded into software. Operators are <strong>long-lived reconcilers</strong>. They continuously monitor the cluster state and actively reconcile the <strong>desired state</strong> you declare in your YAML against the actual state running on the execution plane.</p>
+<p>The business mandate is to transition from consuming external foundation model tokens to producing your own tokens to power internal AI Agents, Applications, and Solutions. To deliver Large Language Models (LLMs) as a governed, shared resource across your enterprise, you must build a highly available, robust platform.</p>
 </div>
 <div class="paragraph">
-<p>Red Hat OpenShift AI uses a <strong>meta-operator</strong> approach. Installing the Red Hat OpenShift AI Operator does <strong>not</strong> instantly materialize every user interface and serving pod. Instead, this core meta-operator deploys most and maintains all underlying components and sub-operators. It acts as a <strong>factory manager</strong> waiting for a declarative blueprint—specifically, the <code>DataScienceCluster</code> Custom Resource—to tell it exactly what subsystems to activate.</p>
+<p>In OpenShift, this Models-as-a-Service (MaaS) foundation relies entirely on Operators. This module serves as a standalone guide to preparing your greenfield environment. By installing this specific combination of infrastructure, serving, and governance operators, you lay the groundwork required to run an OpenShift AI cluster with GPUs and deliver AI at scale.</p>
 </div>
-<div class="admonitionblock warning">
+</div>
+<div class="sect2">
+<h3 id="_value_why_rely_on_operators"><a class="anchor" href="#_value_why_rely_on_operators"></a>Value: Why Rely on Operators?</h3>
+<div class="paragraph">
+<p>Operators are software extensions for Kubernetes that act as automated administrators. They encode human operational knowledge into software to manage applications and their components.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>The win: You eliminate manual intervention for complex, day-two operational tasks like handling upgrades, reacting to failures, and managing backups.</p>
+</li>
+<li>
+<p>The benefit: Operators ensure consistent, repeatable installations and provide constant health checks. Software vendors embed their domain-specific knowledge into the operator, meaning your AI platform handles complex failure recovery automatically.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_architecture_how_operators_work_in_openshift"><a class="anchor" href="#_architecture_how_operators_work_in_openshift"></a>Architecture: How Operators Work in OpenShift</h3>
+<div class="paragraph">
+<p>OpenShift heavily utilizes Operators as a fundamental part of its architecture and management model. To successfully configure your MaaS platform, you must understand these core concepts:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Operator Lifecycle Manager (OLM):</strong> This is a built-in OpenShift feature that simplifies finding, installing, and managing Operators. You will interface with the OLM through the OperatorHub (or "Ecosystem" in OpenShift 4.20+).</p>
+</li>
+<li>
+<p><strong>Custom Resources (CRs) and Controllers:</strong> Operators function using a "controller" pattern. They watch for and manage "Custom Resources" (CRs), which are extensions of the Kubernetes API. When you define a desired state in a CR (e.g., "Deploy an OpenShift AI environment with KServe enabled"), the Operator&#8217;s controller continuously reconciles the current cluster state with your desired state.</p>
+</li>
+<li>
+<p><strong>Cluster vs. Add-on Operators:</strong> OpenShift uses Cluster Operators (managed by the Cluster Version Operator) to run core system functions. For our AI platform, we will be installing optional Add-on Operators managed by the OLM.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_strategy_the_maas_operator_stack"><a class="anchor" href="#_strategy_the_maas_operator_stack"></a>Strategy: The MaaS Operator Stack</h3>
+<div class="paragraph">
+<p>To build a generative AI application platform that provides AI Model Inference at scale, you need a highly specific combination of operators. We categorize these into three distinct layers:</p>
+</div>
+<div class="sect3">
+<h4 id="_1_core_infrastructure_operators"><a class="anchor" href="#_1_core_infrastructure_operators"></a>1. Core &amp; Infrastructure Operators</h4>
+<div class="paragraph">
+<p>These operators provide the foundational hardware detection, acceleration, and overarching platform management.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Red Hat OpenShift AI Operator:</strong> The core meta-operator that manages the entire AI lifecycle platform. For MaaS capabilities, you must install version 3.3 or later.</p>
+</li>
+<li>
+<p><strong>Node Feature Discovery (NFD) Operator:</strong> Detects hardware features on cluster nodes. This is absolutely required for scheduling NUMA-aware workloads and enabling GPU accelerators.</p>
+</li>
+<li>
+<p><strong>Hardware Accelerator Operators:</strong> Depending on your hardware, you must install a specific operator to manage drivers and device plugins. Options include the NVIDIA GPU Operator, AMD GPU Operator, Intel Gaudi Base Operator, or IBM Spyre Operator.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_2_operators_for_inference_at_scale_maas"><a class="anchor" href="#_2_operators_for_inference_at_scale_maas"></a>2. Operators for Inference at Scale (MaaS)</h4>
+<div class="paragraph">
+<p>To safely and efficiently serve LLMs to your enterprise, you must handle networking, security, and distributed workloads.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Red Hat Connectivity Link Operator (v1.2+):</strong> Critical for MaaS. It provides Kubernetes-native authentication and authorization, intercepting incoming traffic to validate JSON web tokens (JWTs) and enforce security policies before requests ever reach your models.</p>
+</li>
+<li>
+<p><strong>Leader Worker Set Operator:</strong> Essential for coordinating multi-node distributed inference pods. It is specifically required when deploying the high-performance Distributed Inference with the llm-d runtime.</p>
+</li>
+<li>
+<p><strong>cert-manager Operator:</strong> Provides automated certificate provisioning, renewal, and retirement. This is required to secure KServe and distributed AI workloads.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_3_operators_for_distributed_workloads_rag"><a class="anchor" href="#_3_operators_for_distributed_workloads_rag"></a>3. Operators for Distributed Workloads &amp; RAG</h4>
+<div class="paragraph">
+<p>If your platform requires advanced job queuing or Retrieval-Augmented Generation (RAG) capabilities:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Red Hat build of Kueue Operator:</strong> Controls resource allocation, manages quotas across different teams, and prioritizes job scheduling to maximize GPU utilization and prevent cluster contention.</p>
+</li>
+<li>
+<p><strong>Llama Stack Operator:</strong> Deploys and manages environments optimized for RAG and agentic workflows, integrating inference models with vector databases (like Milvus or pgvector).</p>
+</li>
+<li>
+<p><strong>Observability Operators:</strong> The Cluster Observability Operator, Tempo Operator, and Red Hat build of OpenTelemetry deploy a stack to collect metrics, traces, and alerts for troubleshooting platform health.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_lab_installing_the_openshift_ai_foundation"><a class="anchor" href="#_lab_installing_the_openshift_ai_foundation"></a>Lab: Installing the OpenShift AI Foundation</h3>
+<div class="paragraph">
+<p>In this lab, you are a platform engineer given a greenfield OpenShift environment. Your goal is to install the baseline OpenShift AI Operator and its immediate hardware dependencies so the cluster is ready for MaaS configuration.</p>
+</div>
+<div class="admonitionblock important">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
+<i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-<div class="title">Architectural Reality Check for RHOAI 3.3</div>
+<div class="title">Prerequisites:</div>
 <div class="paragraph">
-<p>OpenShift AI 3.0 and later introduces significant technology and component changes and is intended for <strong>new installations only</strong>. You cannot directly upgrade from OpenShift AI 2.25 or earlier.</p>
+<p>Access to a greenfield OpenShift cluster.</p>
 </div>
 <div class="paragraph">
-<p>To build our MaaS factory, plan to deploy models using Distributed Inference with llm-d. Your cluster <strong>must be running OpenShift version 4.20 or later</strong>. Distributed Inference with `llm-d is the high-performance, Kubernetes-native framework designed specifically for serving LLMs at scale.</p>
+<p>cluster-admin privileges.</p>
+</div>
+<div class="paragraph">
+<p>Worker nodes equipped with target hardware accelerators (e.g., GPUs).</p>
 </div>
 </td>
 </tr>
 </table>
-</div>
-<hr>
-</div>
-<div class="sect2">
-<h3 id="_your_mission_assemble_the_platform"><a class="anchor" href="#_your_mission_assemble_the_platform"></a>Your Mission: Assemble the Platform</h3>
-<div class="paragraph">
-<p>In this course, you will take on the role of the Platform Engineer to lay the groundwork for this entire journey. We will avoid local machine configurations entirely by utilizing native cloud tools.</p>
-</div>
-<div class="paragraph">
-<p><strong>You will execute the following workflow:</strong></p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p><strong>Lab 0:</strong> Install the OpenShift Web Terminal Operator to establish a zero-dependency command line interface for our cluster.</p>
-</li>
-<li>
-<p><strong>Lab 1:</strong> Deploy the foundational dependencies (<code>cert-manager</code> and <code>Connectivity Link</code>) required for Phase 2 serving and Phase 3 MaaS scaling.</p>
-</li>
-<li>
-<p><strong>Lab 2:</strong> Install the core OpenShift AI Operator and map your physical hardware using NFD to support Phase 1.</p>
-</li>
-<li>
-<p><strong>Lab 3:</strong> Configure the <code>DataScienceCluster</code> to activate the exact components needed for your token factory.</p>
-</li>
-</ol>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_the_shift_to_declarative_deployment"><a class="anchor" href="#_the_shift_to_declarative_deployment"></a>The Shift to Declarative Deployment</h3>
-<div class="paragraph">
-<p>Throughout this course, we standardize on <strong>GitOps-friendly manifests</strong> and CLI-driven deployments. Clicking through the Ecosystem (OperatorHub) user interface is fine for a temporary sandbox, but reproducible Models-as-a-Service (MaaS) demands a consistent, auditable trail. We will declare our subscriptions, channels, and dependencies as code.</p>
 </div>
 </div>
 </div>

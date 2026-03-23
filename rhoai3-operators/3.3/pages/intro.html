@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Architecting the Operator Foundation :: OpenShift Ecosystem &amp; RHOAI 3x Control Plane</title>
+    <meta name="description" content="Phase 0 of the industrialized AI platform path — map and install the OpenShift and OpenShift AI operators that turn a cluster into a governed token factory.">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article product-concept">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Ecosystem &amp; RHOAI 3x Control Plane</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/rhoai3-operators/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="rhoai3-operators" data-version="3.3">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Ecosystem &amp; RHOAI 3x Control Plane</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../chapter1/architecture.html">Architecture &amp; data flow</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../chapter1/lab0-command-center.html">Lab 0 — Command center</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../chapter1/lab1-foundation.html">Lab 1 — Core &amp; hardware discovery</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <button class="nav-item-toggle"></button>
+    <a class="nav-link" href="../chapter1/lab2-governance.html">Lab 2 — Governance dependencies</a>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="2">
+    <a class="nav-link" href="../chapter1/lab3-dsc.html">Lab 3 — DataScienceCluster</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../chapter1/summary.html">Summary &amp; troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Ecosystem &amp; RHOAI 3x Control Plane</span>
+    <span class="version">3.3</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Ecosystem & RHOAI 3x Control Plane</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">3.3</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Ecosystem & RHOAI 3x Control Plane</a></li>
+    <li><a href="intro.html">Architecting the Operator Foundation</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Architecting the Operator Foundation</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph lead">
+<p><strong>Stop consuming tokens. Start producing them. But first, we need to configure the platform.</strong></p>
+</div>
+<div class="paragraph">
+<p>Enterprises default to a <strong>token-consumption</strong> posture: they rent intelligence from the public cloud, absorb unpredictable unit economics, and route sensitive prompts off-prem. Shadow AI makes it worse—ad-hoc clusters, hand-tuned pods, and GPUs purchased as team pets instead of shared, governed capacity. None of that maximizes your <strong>GPU ROI</strong> or shrinks the <strong>time-to-first-token (TTFT)</strong> for the workloads that matter to the business.</p>
+</div>
+<div class="paragraph">
+<p>This course is <strong>Phase 0</strong> of the <strong>Foundations to Scalable AI platform</strong> arc. The modules to follow assume you have a greenfield OpenShift AI 3.3 environment with GPUs.</p>
+</div>
+<div class="paragraph">
+<p>Here, you act as the <strong>platform engineer</strong> who installs only the operators and operands the journey actually needs to build a Generative AI application platform that provides AI Model Inference at Scale using Models-as-a-Service (MaaS).</p>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_what_is_an_operator_and_why_do_we_care"><a class="anchor" href="#_what_is_an_operator_and_why_do_we_care"></a>What is an Operator? (And why do we care?)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>An <strong>Operator</strong> is a software extension that uses Custom Resources (CRs) to manage applications and their underlying components. Think of it as an automated Site Reliability Engineer (SRE) encoded into software. Operators are <strong>long-lived reconcilers</strong>. They continuously monitor the cluster state and actively reconcile the <strong>desired state</strong> you declare in your YAML against the actual state running on the execution plane.</p>
+</div>
+<div class="paragraph">
+<p>Red Hat OpenShift AI uses a <strong>meta-operator</strong> approach. Installing the Red Hat OpenShift AI Operator does <strong>not</strong> instantly materialize every user interface and serving pod. Instead, this core meta-operator deploys most and maintains all underlying components and sub-operators. It acts as a <strong>factory manager</strong> waiting for a declarative blueprint—specifically, the <code>DataScienceCluster</code> Custom Resource—to tell it exactly what subsystems to activate.</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="title">Architectural Reality Check for RHOAI 3.3</div>
+<div class="paragraph">
+<p>OpenShift AI 3.0 and later introduces significant technology and component changes and is intended for <strong>new installations only</strong>. You cannot directly upgrade from OpenShift AI 2.25 or earlier.</p>
+</div>
+<div class="paragraph">
+<p>To build our MaaS factory, plan to deploy models using Distributed Inference with llm-d. Your cluster <strong>must be running OpenShift version 4.20 or later</strong>. Distributed Inference with `llm-d is the high-performance, Kubernetes-native framework designed specifically for serving LLMs at scale.</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_your_mission_assemble_the_platform"><a class="anchor" href="#_your_mission_assemble_the_platform"></a>Your Mission: Assemble the Platform</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>In this course, you will take on the role of the Platform Engineer to lay the groundwork for this entire journey. We will avoid local machine configurations entirely by utilizing native cloud tools.</p>
+</div>
+<div class="paragraph">
+<p><strong>You will execute the following workflow:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Lab 0:</strong> Install the OpenShift Web Terminal Operator to establish a zero-dependency command line interface for our cluster.</p>
+</li>
+<li>
+<p><strong>Lab 1:</strong> Deploy the foundational dependencies (<code>cert-manager</code> and <code>Connectivity Link</code>) required for Phase 2 serving and Phase 3 MaaS scaling.</p>
+</li>
+<li>
+<p><strong>Lab 2:</strong> Install the core OpenShift AI Operator and map your physical hardware using NFD to support Phase 1.</p>
+</li>
+<li>
+<p><strong>Lab 3:</strong> Configure the <code>DataScienceCluster</code> to activate the exact components needed for your token factory.</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_the_shift_to_declarative_deployment"><a class="anchor" href="#_the_shift_to_declarative_deployment"></a>The Shift to Declarative Deployment</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Throughout this course, we standardize on <strong>GitOps-friendly manifests</strong> and CLI-driven deployments. Clicking through the Ecosystem (OperatorHub) user interface is fine for a temporary sandbox, but reproducible Models-as-a-Service (MaaS) demands a consistent, auditable trail. We will declare our subscriptions, channels, and dependencies as code.</p>
+</div>
+</div>
+</div>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>
