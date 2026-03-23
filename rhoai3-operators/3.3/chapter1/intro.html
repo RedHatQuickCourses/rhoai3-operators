@@ -120,7 +120,7 @@
 <p>The business mandate is to transition from consuming external foundation model tokens to producing your own tokens to power internal AI Agents, Applications, and Solutions. To deliver Large Language Models (LLMs) as a governed, shared resource across your enterprise, you must build a highly available, robust platform.</p>
 </div>
 <div class="paragraph">
-<p>In OpenShift, this Models-as-a-Service (MaaS) foundation relies entirely on Operators. This module serves as a standalone guide to preparing your greenfield environment. By installing this specific combination of infrastructure, serving, and governance operators, you lay the groundwork required to run an OpenShift AI cluster with GPUs and deliver AI at scale.</p>
+<p>In OpenShift, this Models-as-a-Service (MaaS) foundation relies primarily on Operators. This module serves as a standalone guide to preparing your greenfield environment. By installing this specific combination of infrastructure, serving, and governance operators, you lay the groundwork required to run an OpenShift AI cluster with GPUs and deliver AI at scale.</p>
 </div>
 </div>
 </div>
@@ -133,10 +133,10 @@
 <div class="ulist">
 <ul>
 <li>
-<p>The win: You eliminate manual intervention for complex, day-two operational tasks like handling upgrades, reacting to failures, and managing backups.</p>
+<p><strong>The win:</strong> You eliminate manual intervention for complex, day-two operational tasks like handling upgrades, reacting to failures, and managing backups.</p>
 </li>
 <li>
-<p>The benefit: Operators ensure consistent, repeatable installations and provide constant health checks. Software vendors embed their domain-specific knowledge into the operator, meaning your AI platform handles complex failure recovery automatically.</p>
+<p><strong>The benefits:</strong> Operators ensure consistent, repeatable installations and provide constant health checks. Software vendors embed their domain-specific knowledge into the operator, meaning your AI platform handles complex failure recovery automatically.</p>
 </li>
 </ul>
 </div>
@@ -185,6 +185,9 @@
 <li>
 <p><strong>Hardware Accelerator Operators:</strong> Depending on your hardware, you must install a specific operator to manage drivers and device plugins. Options include the NVIDIA GPU Operator, AMD GPU Operator, Intel Gaudi Base Operator, or IBM Spyre Operator.</p>
 </li>
+<li>
+<p><strong>Cert-manager Operator:</strong> Provides automated certificate provisioning, renewal, and retirement. This is required to secure KServe and distributed AI workloads.</p>
+</li>
 </ul>
 </div>
 </div>
@@ -200,9 +203,6 @@
 </li>
 <li>
 <p><strong>Leader Worker Set Operator:</strong> Essential for coordinating multi-node distributed inference pods. It is specifically required when deploying the high-performance Distributed Inference with the llm-d runtime.</p>
-</li>
-<li>
-<p><strong>cert-manager Operator:</strong> Provides automated certificate provisioning, renewal, and retirement. This is required to secure KServe and distributed AI workloads.</p>
 </li>
 </ul>
 </div>
