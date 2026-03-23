@@ -1,1 +1,107 @@
-[cite: 122]
+= Activating OpenShift AI: DSCI and DataScienceCluster Configuration
+:toc:
+:icons: font
+
+Installing the Red Hat OpenShift AI (RHOAI) Operator only deploys the controller. To actually build your Models-as-a-Service (MaaS) environment, you must configure two core Custom Resources: `DSCInitialization` (DSCI) and `DataScienceCluster` (DSC).
+
+== Part 1: Understanding DSCInitialization (DSCI)
+
+When the RHOAI Operator spins up, it automatically creates a default `DSCInitialization` resource named `default-dsci`. 
+
+While you rarely need to create this from scratch, understanding its configuration is critical for Day 2 operations. The DSCI controls the foundational, cluster-wide settings for the AI platform.
+
+=== Key DSCI Configurations
+* **Service Mesh Integration:** It tells RHOAI which Service Mesh control plane to use (defaulting to `data-science-smcp` in the `istio-system` namespace).
+* **Monitoring:** It defines the namespace used for platform-wide metrics (`redhat-ods-monitoring`).
+* **Trusted CA Bundles:** If your company uses a private internal Certificate Authority (CA), you inject it here so that all your model-serving pods inherently trust your corporate network.
+
+*Command to inspect your active DSCI:*
+[source,bash]
+----
+oc get dsci default-dsci -o yaml
+----
+
+== Part 2: Configuring the DataScienceCluster (DSC)
+
+The `DataScienceCluster` is the master toggle switch for your AI platform. By default, the operator might create a basic one, but for a true Models-as-a-Service (MaaS) architecture leveraging the advanced operators we installed earlier, we need to apply a highly specific configuration.
+
+=== The MaaS Configuration Strategy
+For a modern MaaS stack, we need to ensure the following components are strictly managed:
+* **KServe:** The core model-serving engine.
+* **CodeFlare & Kueue:** For distributed workload and job queue management.
+* **Dashboard:** The UI for your data scientists.
+* **Ray:** For distributed compute execution.
+
+=== Applying the MaaS DataScienceCluster
+This YAML configuration enables the required MaaS components while safely ignoring legacy or unused tools (like ModelMesh, which is typically for smaller, edge-scale models).
+
+[source,bash]
+----
+cat <<EOF | oc apply -f -
+apiVersion: datasciencecluster.opendatahub.io/v1
+kind: DataScienceCluster
+metadata:
+  name: default-dsc
+spec:
+  components:
+    # 1. Core User Interface
+    dashboard:
+      managementState: Managed
+    
+    # 2. Modern Model Serving (MaaS Core)
+    kserve:
+      managementState: Managed
+      serving:
+        managementState: Managed
+        name: knative-serving
+    
+    # 3. Distributed Workload Management
+    codeflare:
+      managementState: Managed
+    kueue:
+      managementState: Managed
+    ray:
+      managementState: Managed
+
+    # 4. Standard Developer Environments
+    workbenches:
+      managementState: Managed
+      
+    # 5. Legacy/Optional Components (Set to Removed if unused to save resources)
+    modelmeshserving:
+      managementState: Removed
+    datasciencepipelines:
+      managementState: Managed
+    trustyai:
+      managementState: Managed
+EOF
+----
+
+== Part 3: Verification
+
+Applying the `DataScienceCluster` triggers the RHOAI operator to orchestrate a massive rollout across your cluster. It will create new namespaces (like `redhat-ods-applications`), configure the Service Mesh control plane, and spin up the KServe and Kuadrant integrations.
+
+=== 1. Monitor the Rollout
+This process can take 5 to 10 minutes. Watch the status of the DataScienceCluster:
+
+[source,bash]
+----
+oc get datasciencecluster default-dsc -o jsonpath='{.status.phase}{"\n"}'
+----
+Wait until the output says `Ready`.
+
+=== 2. Verify the RHOAI Applications
+Check the newly created applications namespace to ensure the core MaaS pods (Dashboard, KServe controller, CodeFlare) are running:
+
+[source,bash]
+----
+oc get pods -n redhat-ods-applications
+----
+
+=== 3. Access the OpenShift AI Dashboard
+Once everything is running, fetch the URL for the RHOAI Dashboard so your data science team can log in:
+
+[source,bash]
+----
+oc get route rhods-dashboard -n redhat-ods-applications -o jsonpath='{"https://"}{.spec.host}{"\n"}'
+----

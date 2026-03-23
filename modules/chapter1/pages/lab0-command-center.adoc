@@ -659,12 +659,86 @@ Once these pods show a status of `Running`, Kueue is successfully registered on 
 
 == Install the Meta-Orchestrator (OpenShift AI)
 
-Finally, with the infrastructure, networking, and serving operators in place, we deploy the "brain" of the operation: the Red Hat OpenShift AI Operator.
+This guide walks through deploying the core Red Hat OpenShift AI Operator. This is the final step in the prerequisites phase for building a Models-as-a-Service (MaaS) solution. 
 
-. Deploy the RHOAI Operator: + 
+IMPORTANT: This guide intentionally stops after installing the Operator. It does *not* deploy the `DataScienceCluster` (DSC) or `DSCInitialization` (DSCI) Custom Resources. Configuring the actual data science environment will be handled in the next section of this enablement journey.
+
+== Prerequisites
+* All foundational operators must be installed and running:
+  ** Node Feature Discovery (NFD)
+  ** NVIDIA GPU Operator
+  ** cert-manager Operator for Red Hat OpenShift
+  ** LeaderWorkerSet (LWS)
+  ** Red Hat Connectivity Link (Kuadrant)
+  ** Red Hat build of Kueue
+* OpenShift CLI (`oc`) installed.
+* Cluster-admin privileges.
+
+== Part 1: Installing the Operator
+
+=== 1. Create the Dedicated Namespace
+Red Hat OpenShift AI requires its operator controller to be installed in the `redhat-ods-operator` namespace.
 
 [source,bash]
-cat <<EOF | oc apply -f - apiVersion: operators.coreos.com/v1alpha1 kind: Subscription metadata: name: rhods-operator namespace: redhat-ods-operator spec: channel: fast installPlanApproval: Automatic name: rhods-operator source: redhat-operators sourceNamespace: openshift-marketplace EOF
-. Verify the Fleet: Run the following command to ensure all your operator subscriptions have successfully registered and are updating. + [source,bash]
-oc get csv -A | grep -E 'nfd|gpu|cert-manager|rhods|leader'
-Expected Output: You should see a list of Cluster Service Versions (CSVs) showing Succeeded in the final column.
+----
+oc create namespace redhat-ods-operator
+----
+
+=== 2. Create the OperatorGroup
+*Management Tactic:* RHOAI manages multiple secondary namespaces (like `redhat-ods-applications`). By using `oc create` and omitting the `targetNamespaces` block, we ensure the Operator Lifecycle Manager (OLM) deploys the operator with the required cluster-wide (`AllNamespaces`) permissions, while avoiding static naming conflicts.
+
+[source,bash]
+----
+cat <<EOF | oc create -f -
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  generateName: redhat-ods-operator-
+  namespace: redhat-ods-operator
+EOF
+----
+
+=== 3. Subscribe to the stable-3.3 Channel
+*Management Tactic:* Because we are building a highly specific MaaS stack, we want to pin the installation to the `stable-3.3` channel to ensure we get `rhods-operator.3.3.0` (or its immediate patches) rather than accidentally floating to a future major release that might introduce breaking changes to our MaaS architecture.
+
+[source,bash]
+----
+cat <<EOF | oc create -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: rhods-operator
+  namespace: redhat-ods-operator
+spec:
+  channel: "stable-3.3"
+  installPlanApproval: Automatic
+  name: rhods-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF
+----
+
+== Part 2: Verification
+
+=== 1. Verify the Operator Controller Installed
+Wait a few moments for OLM to process the subscription, then check the ClusterServiceVersion (CSV) to ensure RHOAI downloaded successfully.
+
+[source,bash]
+----
+oc get csv -n redhat-ods-operator
+----
+You should see output similar to this, confirming version 3.3.x is active:
+`rhods-operator.3.3.0    Red Hat OpenShift AI    3.3.0 ... Succeeded`
+
+=== 2. Verify the Controller Pods are Running
+Check that the operator pod has successfully spun up in the namespace:
+
+[source,bash]
+----
+oc get pods -n redhat-ods-operator
+----
+
+Once the `rhods-operator` pod shows a status of `Running`, the OpenShift AI APIs are successfully registered on your cluster. 
+
+== Next Steps
+You have successfully installed the RHOAI Operator! The cluster is now waiting for instructions. Proceed to the next page of this guide to create the `DSCInitialization` and `DataScienceCluster` Custom Resources, which will officially activate the Models-as-a-Service capabilities.
