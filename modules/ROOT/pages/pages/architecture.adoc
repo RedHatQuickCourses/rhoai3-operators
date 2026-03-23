@@ -1,0 +1,115 @@
+= Operators & Ecosystem
+:navtitle: Architecture & Operator Roster
+:toc: macro
+:page-role: architecture-concept
+:description: Understanding how OpenShift AI 3.3 operators map to the token production lifecycle, from physical hardware discovery to Models-as-a-Service governance.
+
+[.lead]
+*Your business mandate is to flip that narrative: to move from consuming tokens to producing them at scale.*
+
+To successfully build and troubleshoot this AI Factory, a Platform Engineer must understand the underlying ecosystem. Deploying every operator in the catalog is an anti-pattern: you pay in CPU, memory, reconciliation storms, and upgrade risks. Instead, we provision strictly against our factory outcomes.
+
+== 1. The Meta-Operator & Namespace Isolation
+
+A common misconception is that installing the OpenShift AI operator immediately spins up your entire factory. Instead, it relies on the **Operator Lifecycle Manager (OLM)** and a **Meta-Operator Pattern**. 
+
+When installed, the Red Hat OpenShift AI Operator acts as the factory manager. It waits for you to define your `DataScienceCluster` custom resource (which we will do in Lab 3), and then it orchestrates the deployment of specific components across isolated namespaces. 
+
+Familiarize yourself with these namespaces, as you will spend a lot of time troubleshooting within them:
+
+* **`redhat-ods-operator`**: The control room. Where the meta-operator itself lives and runs its reconciliation loops.
+* **`redhat-ods-applications`**: The factory floor. Where the core UI, dashboard components, and Model Catalog run.
+* **`rhoai-model-registries`**: The isolated namespace specifically targeted for the Model Registry components (think of this as your AI "Title Office").
+* **`rhods-notebooks`**: The R&D lab. Where standard data science workbenches are deployed by default.
+
+
+== 2. The Dependency Rules: Why Order Matters
+
+Generative AI at scale is a highly complex compound system. You cannot install components out of order and expect the factory to run. The following dependency chain dictates our installation progression:
+
+=== Hardware Labels before Hardware Allocation
+GPUs you cannot label are GPUs you cannot schedule reliably. You must install **Node Feature Discovery (NFD)** to publish hardware labels (CPU flags, PCI devices, accelerators) on nodes. Only once NFD has detected the hardware can the GPU operators properly attach drivers so Kubernetes can schedule `resources.limits` on GPUs.
+
+=== Trust before Traffic
+Unsecured inference endpoints are a liability. KServe-oriented stacks commonly depend on in-cluster certificate issuance. The **cert-manager Operator** must be installed *before* the OpenShift AI operator to eliminate manual certificate rotation theater. 
+
+=== Gateways before Governed Exposure
+An unmanaged endpoint is a liability; a governed endpoint is a product. To enable Models-as-a-Service (MaaS) with strict authentication and rate-limiting, the gateway infrastructure must be present.
+
+[NOTE]
+.The Evolution of Auth: Authorino vs. Connectivity Link
+====
+If you deployed older 2.x environments, you likely installed the Authorino Operator directly. For OpenShift AI 3.3 and the new Gateway API MaaS patterns, the **Red Hat Connectivity Link Operator** is your unified gateway manager. It installs the Kuadrant-oriented connectivity layer, handling the underlying authentication (JWT validation) and rate-limiting policies previously managed by standalone Authorino deployments. 
+====
+
+== 3. The Platform Engineer's Decision Matrix
+
+Use the following matrices to understand exactly which operators unlock which capabilities in our journey. We have structured this into the exact order you should deploy them.
+
+=== A: The Core Pre-requisites (Install First)
+These operators lay the foundation. They must be present and healthy before the OpenShift AI meta-operator is installed.
+
+[cols="1,2,2", options="header"]
+|===
+| Operator | What it does | Factory Outcome
+
+| **Node Feature Discovery (NFD)**
+| Scans the cluster and publishes hardware labels on nodes.
+| GPU operators and schedulers see the same truth. Hardware placement stops being guesswork.
+
+| **cert-manager**
+| Provides issuers, certificates, and renewals for in-cluster TLS consumers.
+| **Strict Prerequisite:** Secures KServe and distributed workloads. Eliminates manual cert rotation.
+
+| **Hardware Accelerator Operator**
+| Manages drivers and device plugins for your specific hardware.
+| Enables GPU-as-a-Service. *For this use case, we will use the **NVIDIA GPU Operator**.* (Alternatives: AMD GPU, Intel Gaudi Base, or IBM Spyre Operators).
+
+| **Red Hat build of Kueue**
+| Controls quotas, priorities, and preemption policies.
+| **Strict Prerequisite for Hardware Profiles.** Stops queue sprawl and aligns compute spend with business priority.
+|===
+
+=== B: The Meta-Operator & Automated Subsystems
+Once the concrete is poured, we install the factory manager.
+
+[cols="1,2,2", options="header"]
+|===
+| Operator | What it does | Factory Outcome
+
+| **Red Hat OpenShift AI Operator**
+| The core meta-operator that manages the entire AI lifecycle platform.
+| Waits for your `DataScienceCluster` blueprint to deploy the dashboard, model registry, and serving controllers. (Requires v3.3+ for MaaS).
+
+| **Service Mesh 3 Operator**
+| Manages pod-to-pod encrypted traffic, telemetry, and tracing.
+| **Auto-Managed:** In v3.3, the OpenShift AI operator automatically handles the installation/integration of Service Mesh 3 when required by components like the Llama Stack.
+|===
+
+=== C: Inference at Scale & MaaS (Scale-Out Machinery)
+To deliver Large Language Models (LLMs) as a governed, shared resource across your enterprise, these operators handle distributed serving and external access.
+
+[cols="1,2,2", options="header"]
+|===
+| Operator | What it does | Factory Outcome
+
+| **Red Hat Connectivity Link**
+| Provides Kuadrant-style policy attachment, authN/Z hooks, and rate limits on ingress.
+| Turns raw endpoints into products with SLAs—internal MaaS without anonymous GPU burn.
+
+| **Leader Worker Set**
+| Orchestration primitive for leader/worker distributed pods.
+| Required for **Distributed Inference (`llm-d`)**. Lets very large models span devices and nodes instead of forcing vertical-only designs.
+|===
+
+[IMPORTANT]
+.MaaS Configuration Target
+====
+Operators and this foundation are critical; they make the difference between a feature working and failing silently. To optimally configure your generative AI platform for MaaS, you will eventually set `modelsAsService` to `Managed` and `kserve` to `Managed` in your `DataScienceCluster` custom resource. **Do not attempt this until the roster above is successfully running.**
+====
+
+== Next Step
+
+Now that you understand the blueprints, the required namespaces, and the strict dependency chains, it is time to open your command center and start applying manifests. 
+
+Proceed to **Lab 0: CLI-Driven Setup (The Command Center)** to begin the installation.
