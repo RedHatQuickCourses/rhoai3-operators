@@ -13,15 +13,15 @@
 
 The business mandate is to transition from consuming external foundation model tokens to producing your own tokens to power internal AI Agents, Applications, and Solutions. To deliver Large Language Models (LLMs) as a governed, shared resource across your enterprise, you must build a highly available, robust platform.
 
-In OpenShift, this Models-as-a-Service (MaaS) foundation relies entirely on Operators. This module serves as a standalone guide to preparing your greenfield environment. By installing this specific combination of infrastructure, serving, and governance operators, you lay the groundwork required to run an OpenShift AI cluster with GPUs and deliver AI at scale.
+In OpenShift, this Models-as-a-Service (MaaS) foundation relies primarily on Operators. This module serves as a standalone guide to preparing your greenfield environment. By installing this specific combination of infrastructure, serving, and governance operators, you lay the groundwork required to run an OpenShift AI cluster with GPUs and deliver AI at scale.
 
 == Value: Why Rely on Operators?
 
 Operators are software extensions for Kubernetes that act as automated administrators. They encode human operational knowledge into software to manage applications and their components.
 
- * The win: You eliminate manual intervention for complex, day-two operational tasks like handling upgrades, reacting to failures, and managing backups.
+ * *The win:* You eliminate manual intervention for complex, day-two operational tasks like handling upgrades, reacting to failures, and managing backups.
 
- * The benefit: Operators ensure consistent, repeatable installations and provide constant health checks. Software vendors embed their domain-specific knowledge into the operator, meaning your AI platform handles complex failure recovery automatically.
+ * *The benefits:* Operators ensure consistent, repeatable installations and provide constant health checks. Software vendors embed their domain-specific knowledge into the operator, meaning your AI platform handles complex failure recovery automatically.
 
 == Architecture: How Operators Work in OpenShift
 
@@ -46,14 +46,14 @@ These operators provide the foundational hardware detection, acceleration, and o
 
  * *Hardware Accelerator Operators:* Depending on your hardware, you must install a specific operator to manage drivers and device plugins. Options include the NVIDIA GPU Operator, AMD GPU Operator, Intel Gaudi Base Operator, or IBM Spyre Operator.
 
+ * *Cert-manager Operator:* Provides automated certificate provisioning, renewal, and retirement. This is required to secure KServe and distributed AI workloads.
+
 === 2. Operators for Inference at Scale (MaaS)
 To safely and efficiently serve LLMs to your enterprise, you must handle networking, security, and distributed workloads.
 
  * *Red Hat Connectivity Link Operator (v1.2+):* Critical for MaaS. It provides Kubernetes-native authentication and authorization, intercepting incoming traffic to validate JSON web tokens (JWTs) and enforce security policies before requests ever reach your models.
 
  * *Leader Worker Set Operator:* Essential for coordinating multi-node distributed inference pods. It is specifically required when deploying the high-performance Distributed Inference with the llm-d runtime.
-
- * *cert-manager Operator:* Provides automated certificate provisioning, renewal, and retirement. This is required to secure KServe and distributed AI workloads.
 
 === 3. Operators for Distributed Workloads & RAG
 If your platform requires advanced job queuing or Retrieval-Augmented Generation (RAG) capabilities:

@@ -7,13 +7,15 @@
 :description: Step-by-step lab to deploy the Web Terminal, infrastructure operators, and OpenShift AI using the command line.
 
 [.lead]
-Clickops does not scale. It is time to apply configuration as code.
+It is time to apply configuration as code.
 
 In this lab, you are a platform engineer tasked with bootstrapping a greenfield OpenShift cluster into a Models-as-a-Service (MaaS) factory. While you could install these operators one by one through the OpenShift Web Console UI, real factories are built with automation and code.
 
 To execute this, we will first install the Red Hat Web Terminal Operator via the UI. This provides a secure, in-cluster command-line interface directly within your browser. From there, we will deploy the rest of the MaaS operator stack using the oc CLI.
 
-[IMPORTANT] .Prerequisites
+[IMPORTANT] 
+.Prerequisites
+====
 Access to an OpenShift cluster with cluster-admin privileges.
 
 Worker nodes equipped with target hardware accelerators (e.g., GPUs).
@@ -23,48 +25,645 @@ Worker nodes equipped with target hardware accelerators (e.g., GPUs).
 
 Before we can run our deployment scripts, we need a terminal connected to the cluster.
 
-Log in to the OpenShift Web Console as a cluster administrator.
+ . Log in to the OpenShift Web Console as a cluster administrator.
 
-Navigate to Operators -> OperatorHub (or Ecosystem).
+ . Navigate to Ecosystem -> Software Catalog (or OperatorHub).
 
-Search for Web Terminal and click the Red Hat Web Terminal card.
+. Search for Web Terminal and click the Red Hat Web Terminal card.
 
-Click Install and accept the default settings.
+. Click Install and accept the default settings.
 
-Wait for the installation to succeed.
+. Wait for the installation to succeed, refresh the page.
 
 Launch the Terminal: Look at the top right of the OpenShift Web Console header. You will now see a command-line icon (>_). Click it.
 
-A terminal window will initialize at the bottom of your screen, pre-authenticated with your admin credentials.
+A terminal window will initialize at the bottom of your screen Click start, and a pre-authenticated prompt will appear.
 
 == Step 2: Lay the Hardware Foundation (NFD & GPU)
 
 Now that you are in the terminal, we will use Kubernetes manifests (YAML) to instruct the Operator Lifecycle Manager (OLM) to subscribe to our required infrastructure operators.
 
-. Create the NFD Namespace & Subscription: + [source,bash]
-cat <<EOF | oc apply -f - apiVersion: v1 kind: Namespace metadata: name: openshift-nfd
-apiVersion: operators.coreos.com/v1alpha1 kind: Subscription metadata: name: nfd namespace: openshift-nfd spec: channel: stable installPlanApproval: Automatic name: nfd source: redhat-operators sourceNamespace: openshift-marketplace EOF
-. Activate NFD (Create the Custom Resource): Wait a minute for the operator pod to start, then tell NFD to scan your nodes. + [source,bash]
-cat <<EOF | oc apply -f - apiVersion: nfd.openshift.io/v1 kind: NodeFeatureDiscovery metadata: name: nfd-instance namespace: openshift-nfd spec: operand: image: registry.redhat.io/openshift4/ose-node-feature-discovery:v4.14 topologyupdater: false EOF
-. Deploy the NVIDIA GPU Operator: With NFD labeling your nodes, deploy the GPU operator to inject the drivers. + [source,bash]
-cat <<EOF | oc apply -f - apiVersion: v1 kind: Namespace metadata: name: nvidia-gpu-operator
-apiVersion: operators.coreos.com/v1alpha1 kind: Subscription metadata: name: gpu-operator-certified namespace: nvidia-gpu-operator spec: channel: v23.9 installPlanApproval: Automatic name: gpu-operator-certified source: certified-operators sourceNamespace: openshift-marketplace EOF
-(Note: After this subscription installs, a ClusterPolicy CR must be created. In many OpenShift environments, the operator can auto-generate a default policy once it detects GPU labels).
+The NFD operator scans your nodes and applies specific hardware labels (e.g., highlighting that a node has an NVIDIA H100 or an AMD MI300X). The GPU operators rely entirely on these labels to know where to install their drivers.
+
+=== Procedure: Install the NFD Operator
+
+==== Create the Namespace
+Always start with a fresh namespace to avoid Operator Lifecycle Manager (OLM) conflicts.
+
+[source,bash]
+----
+oc create namespace openshift-nfd
+----
+
+==== Create the OperatorGroup
+Use `oc create` (not `oc apply`) to allow OLM to dynamically generate a unique name for the OperatorGroup, preventing state conflicts.
+
+[source,bash]
+----
+cat <<EOF | oc create -f -
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  generateName: openshift-nfd-
+  namespace: openshift-nfd
+spec:
+  targetNamespaces:
+  - openshift-nfd
+EOF
+----
+
+==== Create the Subscription
+This subscribes the namespace to the Red Hat catalog, triggering the OLM to download and install the NFD Operator.
+
+[source,bash]
+----
+cat <<EOF | oc create -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: nfd
+  namespace: openshift-nfd
+spec:
+  channel: "stable"
+  installPlanApproval: Automatic
+  name: nfd
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF
+----
+
+==== Verify Operator Installation
+Wait a few moments, then check the ClusterServiceVersion (CSV) to ensure the operator installed successfully.
+
+[source,bash]
+----
+oc get csv -n openshift-nfd
+----
+*Note:* Proceed to Step 5 only when the `PHASE` displays as `Succeeded`.
+
+==== Create the NodeFeatureDiscovery Instance
+Installing the operator only deploys the controller. To deploy the daemonsets that actually scan your nodes for hardware features, create the Custom Resource.
+
+[source,bash]
+----
+cat <<EOF | oc create -f -
+apiVersion: nfd.openshift.io/v1
+kind: NodeFeatureDiscovery
+metadata:
+  name: nfd-instance
+  namespace: openshift-nfd
+spec: {}
+EOF
+----
+
+==== Verify Hardware Discovery
+Check that the NFD master and worker pods are running:
+
+[source,bash]
+----
+oc get pods -n openshift-nfd
+----
+
+To verify that NFD is successfully labeling your nodes with hardware features, pick a worker node and describe it:
+
+[source,bash]
+----
+oc describe node <your-worker-node-name> | grep feature.node.kubernetes.io
+----
+
+**The GenAI Value:** NFD is the foundation of hardware governance. By labeling your nodes, NFD allows you to subsequently deploy the NVIDIA or AMD operators and configure precise Hardware Profiles. This prevents developers from accidentally scheduling an expensive H100 GPU for a simple CPU-bound data preprocessing task.
+
+---
+
+=== Deploy the NVIDIA GPU Operator:
+
+ . Deploy the NVIDIA GPU Operator: With NFD labeling your nodes, deploy the GPU operator to inject the drivers. + 
+ 
+[= Battle-Tested Guide: Installing the NVIDIA GPU Operator in OpenShift
+:toc:
+:icons: font
+
+This guide walks through deploying the certified NVIDIA GPU Operator. It includes real-world management tactics for dealing with Operator Lifecycle Manager (OLM) quirks, dynamic channel selection, and strict Custom Resource schemas.
+
+==== Prerequisites
+* Node Feature Discovery (NFD) must be installed and running.
+* OpenShift CLI (`oc`) installed.
+* Cluster-admin privileges.
+* _Note: You can install this operator without GPU nodes present. The driver daemonsets will simply remain unscheduled until a GPU node is added to the cluster._
+
+==== Installing the Operator
+
+==== Create a Dedicated Namespace
+Always give the GPU operator its own namespace to prevent OLM tracking conflicts.
+
+[source,bash]
+----
+oc create namespace nvidia-gpu-operator
+----
+
+==== Create the OperatorGroup (The "Clean State" Method)
+*Management Tactic:* Always use `oc create` with `generateName` rather than `oc apply` for OperatorGroups. OLM strictly tracks state; if you force a static name and the installation fails, OLM will silently refuse to process future updates in that namespace. Letting OpenShift generate the name prevents state collisions.
+
+[source,bash]
+----
+cat <<EOF | oc create -f -
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  generateName: nvidia-gpu-operator-
+  namespace: nvidia-gpu-operator
+spec:
+  targetNamespaces:
+  - nvidia-gpu-operator
+EOF
+----
+
+==== Dynamically Find the Channel and Subscribe
+
+[WARNING]
+Operator channels change as new versions are released (e.g., `v24.09` to `v25.10`). Hardcoding the channel often breaks automated scripts. This block dynamically queries the catalog for the correct default channel before creating the Subscription.
+
+[source,bash]
+----
+# Fetch the current default channel
+CHANNEL=$(oc get packagemanifest gpu-operator-certified -n openshift-marketplace -o jsonpath='{.status.defaultChannel}')
+
+# Create the subscription using the discovered channel
+cat <<EOF | oc create -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: gpu-operator-certified
+  namespace: nvidia-gpu-operator
+spec:
+  channel: "${CHANNEL}"
+  installPlanApproval: Automatic
+  name: gpu-operator-certified
+  source: certified-operators
+  sourceNamespace: openshift-marketplace
+EOF
+----
+
+==== OLM Troubleshooting Tactics
+If the operator does not immediately install, OLM might be stuck. Use these commands to diagnose the silent failures:
+
+*Check if OLM registered the Subscription:*
+[source,bash]
+----
+oc get subscription gpu-operator-certified -n nvidia-gpu-operator -o wide
+----
+
+*Check if an InstallPlan was generated or failed:*
+[source,bash]
+----
+oc get installplan -n nvidia-gpu-operator
+----
+
+*Verify the ClusterServiceVersion (CSV) succeeded:*
+[source,bash]
+----
+oc get csv -n nvidia-gpu-operator
+----
+_Do not proceed to Part 3 until the CSV phase shows as `Succeeded`._
+
+==== Deploying the ClusterPolicy
+The operator controller is running, but it does nothing until a `ClusterPolicy` is defined. 
+
+[WARNING]
+In older versions, you could pass an empty `spec: {}` and a mutating webhook would fill in the blanks. In versions `v25.10` and later, the Custom Resource Definition enforces strict OpenAPI validation. You must explicitly define the required schema blocks and configure the runtime for OpenShift (`crio`).
+
+[source,bash]
+----
+cat <<EOF | oc create -f -
+apiVersion: nvidia.com/v1
+kind: ClusterPolicy
+metadata:
+  name: gpu-cluster-policy
+spec:
+  operator:
+    defaultRuntime: crio
+  driver:
+    enabled: true
+  toolkit:
+    enabled: true
+  devicePlugin:
+    enabled: true
+  dcgm:
+    enabled: true
+  dcgmExporter:
+    enabled: true
+  gfd:
+    enabled: true
+  nodeStatusExporter:
+    enabled: true
+  daemonsets: {}
+EOF
+----
+
+==== Verification
+Once the ClusterPolicy is accepted, the operator will attempt to roll out the NVIDIA driver daemonsets to any NFD-labeled GPU nodes.
+
+Watch the operator build the environment:
+[source,bash]
+----
+oc get clusterpolicy gpu-cluster-policy
+oc get pods -n nvidia-gpu-operator
+----
+_Note: If you have no GPU nodes, the pods responsible for the device plugin and drivers will not deploy, which is expected behavior._
+
+
 
 == Step 3: Deploy the Networking & Distributed Serving Layer
 
 To serve models securely and across multiple nodes, we need our certificates and distributed workload managers.
- 
- [source,bash]
-. Install cert-manager:
-cat <<EOF | oc apply -f - apiVersion: operators.coreos.com/v1alpha1 kind: Subscription metadata: name: openshift-cert-manager-operator namespace: cert-manager-operator spec: channel: stable-v1 installPlanApproval: Automatic name: openshift-cert-manager-operator source: redhat-operators sourceNamespace: openshift-marketplace EOF
-. Install LeaderWorkerSet (LWS): (Required for llm-d distributed runtime). + [source,bash]
-cat <<EOF | oc apply -f - apiVersion: operators.coreos.com/v1alpha1 kind: Subscription metadata: name: leader-worker-set namespace: openshift-operators spec: channel: alpha installPlanApproval: Automatic name: leader-worker-set source: redhat-operators sourceNamespace: openshift-marketplace EOF
-== Step 4: Install the Meta-Orchestrator (OpenShift AI)
+This guide walks through deploying the certified `cert-manager Operator for Red Hat OpenShift`. This operator is a prerequisite for Red Hat OpenShift AI (RHOAI) 3.3, as RHOAI relies heavily on automated TLS certificate generation for its internal communication, webhooks, and model-serving components.
+
+===Installing the Operator
+
+==== Create the Dedicated Namespace
+Red Hat's recommended namespace for the operator controller is `cert-manager-operator`. 
+
+[source,bash]
+----
+oc create namespace cert-manager-operator
+----
+
+==== Create the OperatorGroup (The "Clean State" Method)
+*Management Tactic:* Always use `oc create` with `generateName` rather than `oc apply` for OperatorGroups. This prevents Operator Lifecycle Manager (OLM) state collisions by letting OpenShift safely generate a unique tracking ID, ensuring silent failures don't block the installation.
+
+[source,bash]
+----
+cat <<EOF | oc create -f -
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  generateName: openshift-cert-manager-
+  namespace: cert-manager-operator
+spec:
+  targetNamespaces:
+  - cert-manager-operator
+EOF
+----
+
+==== Dynamically Find the Channel and Subscribe
+*Management Tactic:* Hardcoded channels are the number one reason automation scripts break over time. This snippet queries the `redhat-operators` catalog for the current default channel of the `openshift-cert-manager-operator` and injects it directly into the Subscription.
+
+[source,bash]
+----
+# Fetch the current default channel
+CHANNEL=$(oc get packagemanifest openshift-cert-manager-operator -n openshift-marketplace -o jsonpath='{.status.defaultChannel}')
+
+# Create the subscription using the discovered channel
+cat <<EOF | oc create -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: openshift-cert-manager-operator
+  namespace: cert-manager-operator
+spec:
+  channel: "${CHANNEL}"
+  installPlanApproval: Automatic
+  name: openshift-cert-manager-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF
+----
+
+==== Verification
+
+Unlike other operators that require you to manually define a Custom Resource to start the actual workload, the `cert-manager Operator for Red Hat OpenShift` is designed to be autonomous out of the box. 
+
+Once the operator successfully installs, it will *automatically* generate a `CertManager` custom resource named `cluster` and spin up the actual certificate-issuing pods in a brand new, secondary namespace called `cert-manager`.
+
+=== 1. Verify the Operator Installed
+Wait a few moments, then check the ClusterServiceVersion (CSV) to ensure the operator downloaded successfully.
+
+[source,bash]
+----
+oc get csv -n cert-manager-operator
+----
+*Note:* Proceed to the next step only when the `PHASE` displays as `Succeeded`.
+
+=== 2. Verify the Operands Deployed Automatically
+Check the automatically created `cert-manager` namespace to ensure the controller, cainjector, and webhook pods are all initialized and running:
+
+[source,bash]
+----
+oc get pods -n cert-manager
+----
+
+Once those pods are in a `Running` state, your cluster is fully capable of provisioning and rotating its own internal TLS certificates. You are now ready to proceed with the Red Hat OpenShift AI 3.3 installation!
+
+
+=== Install LeaderWorkerSet (LWS): (Required for llm-d distributed runtime). + 
+
+
+This guide walks through deploying the Red Hat LeaderWorkerSet (LWS) Operator. In OpenShift AI 3.3, LWS is a critical dependency for distributed workloads, allowing large AI training and inference tasks to be split across multiple nodes and GPUs using a coordinated leader-worker pod topology.
+
+== Prerequisites
+* OpenShift CLI (`oc`) installed.
+* Cluster-admin privileges.
+
+== Part 1: Installing the Operator
+
+=== 1. Create the Dedicated Namespace
+Red Hat requires the LWS operator to be installed in a specific namespace to function correctly.
+
+[source,bash]
+----
+oc create namespace openshift-lws-operator
+----
+
+=== 2. Create the OperatorGroup (The "Clean State" Method)
+*Management Tactic:* We continue using `oc create` with `generateName`. This prevents Operator Lifecycle Manager (OLM) state collisions by letting OpenShift safely generate a unique tracking ID.
+
+[source,bash]
+----
+cat <<EOF | oc create -f -
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  generateName: openshift-lws-operator-
+  namespace: openshift-lws-operator
+spec:
+  targetNamespaces:
+  - openshift-lws-operator
+EOF
+----
+
+=== 3. Dynamically Find the Channel and Subscribe
+*Management Tactic:* We query the `redhat-operators` catalog for the current default channel of the `lws-operator` package to ensure the installation doesn't break when Red Hat releases new major versions.
+
+[source,bash]
+----
+# Fetch the current default channel
+CHANNEL=$(oc get packagemanifest lws-operator -n openshift-marketplace -o jsonpath='{.status.defaultChannel}')
+
+# Create the subscription using the discovered channel
+cat <<EOF | oc create -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: lws-operator
+  namespace: openshift-lws-operator
+spec:
+  channel: "${CHANNEL}"
+  installPlanApproval: Automatic
+  name: lws-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF
+----
+
+===Deploying the LeaderWorkerSet Instance
+
+==== Verify the Operator Controller Installed
+Wait a few moments, then check the ClusterServiceVersion (CSV) to ensure the operator downloaded successfully.
+
+[source,bash]
+----
+oc get csv -n openshift-lws-operator
+----
+*Note:* Proceed to the next step only when the `PHASE` displays as `Succeeded`.
+
+=== Create the LeaderWorkerSetOperator Custom Resource
+The operator is installed, but it needs a configuration file to deploy the actual LWS components. Red Hat expects this specific Custom Resource to be named `cluster`.
+
+[source,bash]
+----
+cat <<EOF | oc create -f -
+apiVersion: operator.openshift.io/v1
+kind: LeaderWorkerSetOperator
+metadata:
+  name: cluster
+  namespace: openshift-lws-operator
+spec:
+  managementState: Managed
+  logLevel: Normal
+  operatorLogLevel: Normal
+EOF
+----
+
+== Verification
+
+Once the Custom Resource is submitted, the operator will spin up the LWS controller pods that will eventually monitor and manage your distributed AI workloads.
+
+Verify that the LWS controller manager pods are running:
+[source,bash]
+----
+oc get pods -n openshift-lws-operator
+----
+
+Once these pods show a status of `Running`, the LeaderWorkerSet APIs are successfully registered on your cluster and ready to be used by Red Hat OpenShift AI.
+
+== Installing the Red Hat Connectivity Link Operator
+
+
+This guide walks through deploying the Red Hat Connectivity Link Operator. In OpenShift AI 3.3, this operator manages Kuadrant, which is strictly required if you want to expose Large Language Models (LLMs) securely using the Models-as-a-Service (MaaS) interface, enforce rate limits, and provide robust API governance.
+
+== Prerequisites
+* The `cert-manager Operator for Red Hat OpenShift` must be installed and running.
+* OpenShift CLI (`oc`) installed.
+* Cluster-admin privileges.
+
+=== Installing the Operator
+
+====Create the Dedicated Namespace
+Red Hat recommends installing the Connectivity Link operator and its subsequent Kuadrant resources into a dedicated `kuadrant-system` namespace.
+
+[source,bash]
+----
+oc create namespace kuadrant-system
+----
+
+==== Create the OperatorGroup (The "Clean State" Method)
+*Management Tactic:* We continue using `oc create` with `generateName` to avoid Operator Lifecycle Manager (OLM) tracking conflicts.
+
+[source,bash]
+----
+cat <<EOF | oc create -f -
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  generateName: rhcl-operator-
+  namespace: kuadrant-system
+spec:
+  targetNamespaces:
+  - kuadrant-system
+EOF
+----
+
+==== Dynamically Find the Channel and Subscribe
+*Management Tactic:* We query the `redhat-operators` catalog for the current default channel of the `rhcl-operator` package to ensure the installation remains resilient across OpenShift major releases.
+
+[source,bash]
+----
+# Fetch the current default channel
+CHANNEL=$(oc get packagemanifest rhcl-operator -n openshift-marketplace -o jsonpath='{.status.defaultChannel}')
+
+# Create the subscription using the discovered channel
+cat <<EOF | oc create -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: rhcl-operator
+  namespace: kuadrant-system
+spec:
+  channel: "${CHANNEL}"
+  installPlanApproval: Automatic
+  name: rhcl-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF
+----
+
+=== Deploying the Kuadrant Instance
+
+==== Verify the Operator Controller Installed
+Wait a few moments, then check the ClusterServiceVersion (CSV) to ensure the operator downloaded successfully.
+
+[source,bash]
+----
+oc get csv -n kuadrant-system
+----
+*Note:* Proceed to the next step only when the `PHASE` displays as `Succeeded`.
+
+==== Create the Kuadrant Custom Resource
+The operator is installed, but the system isn't active until we deploy the Kuadrant control plane. Passing an empty `spec: {}` tells the operator to deploy the most optimal default configuration.
+
+[source,bash]
+----
+cat <<EOF | oc create -f -
+apiVersion: kuadrant.io/v1beta1
+kind: Kuadrant
+metadata:
+  name: kuadrant
+  namespace: kuadrant-system
+spec: {}
+EOF
+----
+
+=== Verification
+
+Once the Custom Resource is submitted, the operator will spin up the Kuadrant control plane pods, including the authorino (authentication) and limitador (rate-limiting) components.
+
+Watch the pods spin up and ensure they transition to a `Running` state:
+[source,bash]
+----
+oc get pods -n kuadrant-system -w
+----
+
+You can also explicitly verify that the Kuadrant system successfully initialized by checking its deployment conditions:
+[source,bash]
+----
+oc wait kuadrant/kuadrant --for="condition=Ready=true" -n kuadrant-system --timeout=300s
+----
+
+== Installing the Red Hat build of Kueue Operator
+
+While LeaderWorkerSet handles the physical coordination of multi-node pods, Kueue is the "brain" that manages the actual job queues, quotas, and resource sharing. When multiple data science teams are submitting heavy AI workloads, Kueue ensures they don't fight over the same GPUs. It holds jobs in a queue and only releases them to the cluster when the requested hardware (like our NFD-discovered GPUs) is actually available.
+
+Here is an important detail for this specific walkthrough: Because Kueue needs to watch for workloads submitted by data scientists across any project in the cluster, we must configure the OperatorGroup to use Cluster-wide tracking (by omitting the targetNamespaces block).
+
+This guide walks through deploying the Red Hat build of Kueue Operator. In OpenShift AI 3.3, Kueue is the core engine for workload management. It manages job queuing, fair resource sharing, and cluster quotas to ensure distributed AI workloads don't overwhelm available hardware.
+
+
+=== Installing the Operator
+
+==== Create the Dedicated Namespace
+Red Hat's official tracking namespace for the Kueue controller is `openshift-kueue-operator`.
+
+[source,bash]
+----
+oc create namespace openshift-kueue-operator
+----
+
+==== Create the OperatorGroup (Cluster-Wide Mode)
+*Management Tactic:* Kueue must intercept and manage job queues across the entire cluster. By using `oc create` and intentionally **omitting** the `targetNamespaces` block from the OperatorGroup, we force Operator Lifecycle Manager (OLM) to deploy the operator in cluster-wide (`AllNamespaces`) mode.
+
+[source,bash]
+----
+cat <<EOF | oc create -f -
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  generateName: openshift-kueue-operator-
+  namespace: openshift-kueue-operator
+EOF
+----
+
+==== Dynamically Find the Channel and Subscribe
+*Management Tactic:* We query the `redhat-operators` catalog for the current default channel of the `kueue-operator` package to ensure the install script dynamically adapts to future OpenShift versions.
+
+[source,bash]
+----
+# Fetch the current default channel
+CHANNEL=$(oc get packagemanifest kueue-operator -n openshift-marketplace -o jsonpath='{.status.defaultChannel}')
+
+# Create the subscription using the discovered channel
+cat <<EOF | oc create -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: kueue-operator
+  namespace: openshift-kueue-operator
+spec:
+  channel: "${CHANNEL}"
+  installPlanApproval: Automatic
+  name: kueue-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF
+----
+
+=== Deploying the Kueue Instance
+
+==== Verify the Operator Controller Installed
+Wait a few moments, then check the ClusterServiceVersion (CSV) to ensure the operator downloaded and initialized successfully.
+
+[source,bash]
+----
+oc get csv -n openshift-kueue-operator
+----
+*Note:* Proceed to the next step only when the `PHASE` displays as `Succeeded`.
+
+==== Create the Kueue Custom Resource
+The operator is installed, but the queuing engine isn't active until we deploy the central `Kueue` Custom Resource. Red Hat expects this configuration to be named `cluster`. Passing an empty `spec: {}` tells the webhook to inject the optimal default configurations.
+
+[source,bash]
+----
+cat <<EOF | oc create -f -
+apiVersion: kueue.openshift.io/v1
+kind: Kueue
+metadata:
+  name: cluster
+  namespace: openshift-kueue-operator
+spec: {}
+EOF
+----
+
+=== Verification
+
+Once the Custom Resource is submitted, the operator will spin up the Kueue controller manager pods, which actively watch for `ClusterQueue` and `LocalQueue` objects.
+
+Verify that the Kueue controller manager pods are running:
+[source,bash]
+----
+oc get pods -n openshift-kueue-operator
+----
+
+Once these pods show a status of `Running`, Kueue is successfully registered on your cluster. Data science teams can now submit AI training tasks, and Kueue will hold them in line until the cluster has enough resources to execute them.
+
+---
+
+
+== Install the Meta-Orchestrator (OpenShift AI)
 
 Finally, with the infrastructure, networking, and serving operators in place, we deploy the "brain" of the operation: the Red Hat OpenShift AI Operator.
 
-. Deploy the RHOAI Operator: + [source,bash]
+. Deploy the RHOAI Operator: + 
+
+[source,bash]
 cat <<EOF | oc apply -f - apiVersion: operators.coreos.com/v1alpha1 kind: Subscription metadata: name: rhods-operator namespace: redhat-ods-operator spec: channel: fast installPlanApproval: Automatic name: rhods-operator source: redhat-operators sourceNamespace: openshift-marketplace EOF
 . Verify the Fleet: Run the following command to ensure all your operator subscriptions have successfully registered and are updating. + [source,bash]
 oc get csv -A | grep -E 'nfd|gpu|cert-manager|rhods|leader'
