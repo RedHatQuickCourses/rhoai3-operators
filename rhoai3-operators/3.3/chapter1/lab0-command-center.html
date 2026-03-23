@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Lab: Assembling the AI Engine Room :: OpenShift Ecosystem &amp; RHOAI 3x Control Plane</title>
     <link rel="prev" href="architecture.html">
-    <link rel="next" href="lab1-foundation.html">
+    <link rel="next" href="lab3-dsc.html">
     <meta name="generator" content="Antora 3.1.3">
     <link rel="stylesheet" href="../../../_/css/site.css">
     <script>var uiRootPath = '../../../_'</script>
@@ -53,16 +53,7 @@
     <a class="nav-link" href="lab0-command-center.html">Lab 0 — Command center</a>
   </li>
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="lab1-foundation.html">Lab 1 — Core &amp; hardware discovery</a>
-  </li>
-  <li class="nav-item" data-depth="1">
-    <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="lab2-governance.html">Lab 2 — Governance dependencies</a>
-<ul class="nav-list">
-  <li class="nav-item" data-depth="2">
     <a class="nav-link" href="lab3-dsc.html">Lab 3 — DataScienceCluster</a>
-  </li>
-</ul>
   </li>
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="summary.html">Summary &amp; troubleshooting</a>
@@ -1019,28 +1010,163 @@ EOF</code></pre>
 <h2 id="_install_the_meta_orchestrator_openshift_ai"><a class="anchor" href="#_install_the_meta_orchestrator_openshift_ai"></a>Install the Meta-Orchestrator (OpenShift AI)</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Finally, with the infrastructure, networking, and serving operators in place, we deploy the "brain" of the operation: the Red Hat OpenShift AI Operator.</p>
+<p>This guide walks through deploying the core Red Hat OpenShift AI Operator. This is the final step in the prerequisites phase for building a Models-as-a-Service (MaaS) solution.</p>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+This guide intentionally stops after installing the Operator. It does <strong>not</strong> deploy the <code>DataScienceCluster</code> (DSC) or <code>DSCInitialization</code> (DSCI) Custom Resources. Configuring the actual data science environment will be handled in the next section of this enablement journey.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_prerequisites_4"><a class="anchor" href="#_prerequisites_4"></a>Prerequisites</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
 <li>
-<p>Deploy the RHOAI Operator:<br></p>
+<p>All foundational operators must be installed and running:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Node Feature Discovery (NFD)</p>
 </li>
-</ol>
+<li>
+<p>NVIDIA GPU Operator</p>
+</li>
+<li>
+<p>cert-manager Operator for Red Hat OpenShift</p>
+</li>
+<li>
+<p>LeaderWorkerSet (LWS)</p>
+</li>
+<li>
+<p>Red Hat Connectivity Link (Kuadrant)</p>
+</li>
+<li>
+<p>Red Hat build of Kueue</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p>OpenShift CLI (<code>oc</code>) installed.</p>
+</li>
+<li>
+<p>Cluster-admin privileges.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_part_1_installing_the_operator_2"><a class="anchor" href="#_part_1_installing_the_operator_2"></a>Part 1: Installing the Operator</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_1_create_the_dedicated_namespace_2"><a class="anchor" href="#_1_create_the_dedicated_namespace_2"></a>1. Create the Dedicated Namespace</h3>
+<div class="paragraph">
+<p>Red Hat OpenShift AI requires its operator controller to be installed in the <code>redhat-ods-operator</code> namespace.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt;EOF | oc apply -f - apiVersion: operators.coreos.com/v1alpha1 kind: Subscription metadata: name: rhods-operator namespace: redhat-ods-operator spec: channel: fast installPlanApproval: Automatic name: rhods-operator source: redhat-operators sourceNamespace: openshift-marketplace EOF
-. Verify the Fleet: Run the following command to ensure all your operator subscriptions have successfully registered and are updating. + [source,bash]
-oc get csv -A | grep -E 'nfd|gpu|cert-manager|rhods|leader'
-Expected Output: You should see a list of Cluster Service Versions (CSVs) showing Succeeded in the final column.</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace redhat-ods-operator</code></pre>
 </div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_2_create_the_operatorgroup"><a class="anchor" href="#_2_create_the_operatorgroup"></a>2. Create the OperatorGroup</h3>
+<div class="paragraph">
+<p><strong>Management Tactic:</strong> RHOAI manages multiple secondary namespaces (like <code>redhat-ods-applications</code>). By using <code>oc create</code> and omitting the <code>targetNamespaces</code> block, we ensure the Operator Lifecycle Manager (OLM) deploys the operator with the required cluster-wide (<code>AllNamespaces</code>) permissions, while avoiding static naming conflicts.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt;EOF | oc create -f -
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  generateName: redhat-ods-operator-
+  namespace: redhat-ods-operator
+EOF</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_3_subscribe_to_the_stable_3_3_channel"><a class="anchor" href="#_3_subscribe_to_the_stable_3_3_channel"></a>3. Subscribe to the stable-3.3 Channel</h3>
+<div class="paragraph">
+<p><strong>Management Tactic:</strong> Because we are building a highly specific MaaS stack, we want to pin the installation to the <code>stable-3.3</code> channel to ensure we get <code>rhods-operator.3.3.0</code> (or its immediate patches) rather than accidentally floating to a future major release that might introduce breaking changes to our MaaS architecture.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt;EOF | oc create -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: rhods-operator
+  namespace: redhat-ods-operator
+spec:
+  channel: "stable-3.3"
+  installPlanApproval: Automatic
+  name: rhods-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_part_2_verification"><a class="anchor" href="#_part_2_verification"></a>Part 2: Verification</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_1_verify_the_operator_controller_installed"><a class="anchor" href="#_1_verify_the_operator_controller_installed"></a>1. Verify the Operator Controller Installed</h3>
+<div class="paragraph">
+<p>Wait a few moments for OLM to process the subscription, then check the ClusterServiceVersion (CSV) to ensure RHOAI downloaded successfully.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get csv -n redhat-ods-operator</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You should see output similar to this, confirming version 3.3.x is active:
+<code>rhods-operator.3.3.0    Red Hat OpenShift AI    3.3.0 &#8230;&#8203; Succeeded</code></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_2_verify_the_controller_pods_are_running"><a class="anchor" href="#_2_verify_the_controller_pods_are_running"></a>2. Verify the Controller Pods are Running</h3>
+<div class="paragraph">
+<p>Check that the operator pod has successfully spun up in the namespace:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pods -n redhat-ods-operator</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Once the <code>rhods-operator</code> pod shows a status of <code>Running</code>, the OpenShift AI APIs are successfully registered on your cluster.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_next_steps"><a class="anchor" href="#_next_steps"></a>Next Steps</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You have successfully installed the RHOAI Operator! The cluster is now waiting for instructions. Proceed to the next page of this guide to create the <code>DSCInitialization</code> and <code>DataScienceCluster</code> Custom Resources, which will officially activate the Models-as-a-Service capabilities.</p>
 </div>
 </div>
 </div>
 <nav class="pagination">
   <span class="prev"><a href="architecture.html">Architecture &amp; data flow</a></span>
-  <span class="next"><a href="lab1-foundation.html">Lab 1 — Core &amp; hardware discovery</a></span>
+  <span class="next"><a href="lab3-dsc.html">Lab 3 — DataScienceCluster</a></span>
 </nav>
 </article>
   </div>

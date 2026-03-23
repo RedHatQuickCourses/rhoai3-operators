@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Untitled :: OpenShift Ecosystem &amp; RHOAI 3x Control Plane</title>
-    <link rel="prev" href="lab2-governance.html">
+    <title>Activating OpenShift AI: DSCI and DataScienceCluster Configuration :: OpenShift Ecosystem &amp; RHOAI 3x Control Plane</title>
+    <link rel="prev" href="lab0-command-center.html">
     <link rel="next" href="summary.html">
     <meta name="generator" content="Antora 3.1.3">
     <link rel="stylesheet" href="../../../_/css/site.css">
@@ -52,17 +52,8 @@
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="lab0-command-center.html">Lab 0 — Command center</a>
   </li>
-  <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="lab1-foundation.html">Lab 1 — Core &amp; hardware discovery</a>
-  </li>
-  <li class="nav-item" data-depth="1">
-    <button class="nav-item-toggle"></button>
-    <a class="nav-link" href="lab2-governance.html">Lab 2 — Governance dependencies</a>
-<ul class="nav-list">
-  <li class="nav-item is-current-page" data-depth="2">
+  <li class="nav-item is-current-page" data-depth="1">
     <a class="nav-link" href="lab3-dsc.html">Lab 3 — DataScienceCluster</a>
-  </li>
-</ul>
   </li>
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="summary.html">Summary &amp; troubleshooting</a>
@@ -98,7 +89,6 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">OpenShift Ecosystem & RHOAI 3x Control Plane</a></li>
-    <li><a href="lab2-governance.html">Lab 2 — Governance dependencies</a></li>
     <li><a href="lab3-dsc.html">Lab 3 — DataScienceCluster</a></li>
   </ul>
 </nav>
@@ -108,9 +98,184 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
+<h1 class="page">Activating OpenShift AI: DSCI and DataScienceCluster Configuration</h1>
+<div id="toc" class="toc">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_part_1_understanding_dscinitialization_dsci">Part 1: Understanding DSCInitialization (DSCI)</a>
+<ul class="sectlevel2">
+<li><a href="#_key_dsci_configurations">Key DSCI Configurations</a></li>
+</ul>
+</li>
+<li><a href="#_part_2_configuring_the_datasciencecluster_dsc">Part 2: Configuring the DataScienceCluster (DSC)</a>
+<ul class="sectlevel2">
+<li><a href="#_the_maas_configuration_strategy">The MaaS Configuration Strategy</a></li>
+<li><a href="#_applying_the_maas_datasciencecluster">Applying the MaaS DataScienceCluster</a></li>
+</ul>
+</li>
+<li><a href="#_part_3_verification">Part 3: Verification</a>
+<ul class="sectlevel2">
+<li><a href="#_1_monitor_the_rollout">1. Monitor the Rollout</a></li>
+<li><a href="#_2_verify_the_rhoai_applications">2. Verify the RHOAI Applications</a></li>
+<li><a href="#_3_access_the_openshift_ai_dashboard">3. Access the OpenShift AI Dashboard</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Installing the Red Hat OpenShift AI (RHOAI) Operator only deploys the controller. To actually build your Models-as-a-Service (MaaS) environment, you must configure two core Custom Resources: <code>DSCInitialization</code> (DSCI) and <code>DataScienceCluster</code> (DSC).</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_part_1_understanding_dscinitialization_dsci"><a class="anchor" href="#_part_1_understanding_dscinitialization_dsci"></a>Part 1: Understanding DSCInitialization (DSCI)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>When the RHOAI Operator spins up, it automatically creates a default <code>DSCInitialization</code> resource named <code>default-dsci</code>.</p>
+</div>
+<div class="paragraph">
+<p>While you rarely need to create this from scratch, understanding its configuration is critical for Day 2 operations. The DSCI controls the foundational, cluster-wide settings for the AI platform.</p>
+</div>
+<div class="sect2">
+<h3 id="_key_dsci_configurations"><a class="anchor" href="#_key_dsci_configurations"></a>Key DSCI Configurations</h3>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Service Mesh Integration:</strong> It tells RHOAI which Service Mesh control plane to use (defaulting to <code>data-science-smcp</code> in the <code>istio-system</code> namespace).</p>
+</li>
+<li>
+<p><strong>Monitoring:</strong> It defines the namespace used for platform-wide metrics (<code>redhat-ods-monitoring</code>).</p>
+</li>
+<li>
+<p><strong>Trusted CA Bundles:</strong> If your company uses a private internal Certificate Authority (CA), you inject it here so that all your model-serving pods inherently trust your corporate network.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Command to inspect your active DSCI:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get dsci default-dsci -o yaml</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_part_2_configuring_the_datasciencecluster_dsc"><a class="anchor" href="#_part_2_configuring_the_datasciencecluster_dsc"></a>Part 2: Configuring the DataScienceCluster (DSC)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>DataScienceCluster</code> is the master toggle switch for your AI platform. By default, the operator might create a basic one, but for a true Models-as-a-Service (MaaS) architecture leveraging the advanced operators we installed earlier, we need to apply a highly specific configuration.</p>
+</div>
+<div class="sect2">
+<h3 id="_the_maas_configuration_strategy"><a class="anchor" href="#_the_maas_configuration_strategy"></a>The MaaS Configuration Strategy</h3>
+<div class="paragraph">
+<p>For a modern MaaS stack, we need to ensure the following components are strictly managed:
+* <strong>KServe:</strong> The core model-serving engine.
+* <strong>CodeFlare &amp; Kueue:</strong> For distributed workload and job queue management.
+* <strong>Dashboard:</strong> The UI for your data scientists.
+* <strong>Ray:</strong> For distributed compute execution.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_applying_the_maas_datasciencecluster"><a class="anchor" href="#_applying_the_maas_datasciencecluster"></a>Applying the MaaS DataScienceCluster</h3>
+<div class="paragraph">
+<p>This YAML configuration enables the required MaaS components while safely ignoring legacy or unused tools (like ModelMesh, which is typically for smaller, edge-scale models).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt;EOF | oc apply -f -
+apiVersion: datasciencecluster.opendatahub.io/v1
+kind: DataScienceCluster
+metadata:
+  name: default-dsc
+spec:
+  components:
+    # 1. Core User Interface
+    dashboard:
+      managementState: Managed
 
+    # 2. Modern Model Serving (MaaS Core)
+    kserve:
+      managementState: Managed
+      serving:
+        managementState: Managed
+        name: knative-serving
+
+    # 3. Distributed Workload Management
+    codeflare:
+      managementState: Managed
+    kueue:
+      managementState: Managed
+    ray:
+      managementState: Managed
+
+    # 4. Standard Developer Environments
+    workbenches:
+      managementState: Managed
+
+    # 5. Legacy/Optional Components (Set to Removed if unused to save resources)
+    modelmeshserving:
+      managementState: Removed
+    datasciencepipelines:
+      managementState: Managed
+    trustyai:
+      managementState: Managed
+EOF</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_part_3_verification"><a class="anchor" href="#_part_3_verification"></a>Part 3: Verification</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Applying the <code>DataScienceCluster</code> triggers the RHOAI operator to orchestrate a massive rollout across your cluster. It will create new namespaces (like <code>redhat-ods-applications</code>), configure the Service Mesh control plane, and spin up the KServe and Kuadrant integrations.</p>
+</div>
+<div class="sect2">
+<h3 id="_1_monitor_the_rollout"><a class="anchor" href="#_1_monitor_the_rollout"></a>1. Monitor the Rollout</h3>
+<div class="paragraph">
+<p>This process can take 5 to 10 minutes. Watch the status of the DataScienceCluster:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get datasciencecluster default-dsc -o jsonpath='{.status.phase}{"\n"}'</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Wait until the output says <code>Ready</code>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_2_verify_the_rhoai_applications"><a class="anchor" href="#_2_verify_the_rhoai_applications"></a>2. Verify the RHOAI Applications</h3>
+<div class="paragraph">
+<p>Check the newly created applications namespace to ensure the core MaaS pods (Dashboard, KServe controller, CodeFlare) are running:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get pods -n redhat-ods-applications</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_3_access_the_openshift_ai_dashboard"><a class="anchor" href="#_3_access_the_openshift_ai_dashboard"></a>3. Access the OpenShift AI Dashboard</h3>
+<div class="paragraph">
+<p>Once everything is running, fetch the URL for the RHOAI Dashboard so your data science team can log in:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get route rhods-dashboard -n redhat-ods-applications -o jsonpath='{"https://"}{.spec.host}{"\n"}'</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
 <nav class="pagination">
-  <span class="prev"><a href="lab2-governance.html">Lab 2 — Governance dependencies</a></span>
+  <span class="prev"><a href="lab0-command-center.html">Lab 0 — Command center</a></span>
   <span class="next"><a href="summary.html">Summary &amp; troubleshooting</a></span>
 </nav>
 </article>
