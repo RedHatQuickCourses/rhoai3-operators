@@ -6,7 +6,7 @@
 :description: Phase 0 completion checklist, handoff to storage/registry/catalog modules, and operator-level break-fix patterns.
 
 [.lead]
-*The foundation is poured. The machinery is wired. Now organize the supply chain—data, models, profiles—not more operators.*
+*The machinery is wired. Now organize the supply chain—data, models, profiles—not more operators.*
 
 == Infrastructure checkpoint
 

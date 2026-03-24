@@ -17,8 +17,6 @@ To execute this, we will first install the Red Hat Web Terminal Operator via the
 .Prerequisites
 ====
 Access to an OpenShift cluster with cluster-admin privileges.
-
-Worker nodes equipped with target hardware accelerators (e.g., GPUs).
 ====
 
 == Step 1: Gain CLI Access (The Web Terminal)
@@ -99,7 +97,7 @@ Wait a few moments, then check the ClusterServiceVersion (CSV) to ensure the ope
 ----
 oc get csv -n openshift-nfd
 ----
-*Note:* Proceed to Step 5 only when the `PHASE` displays as `Succeeded`.
+*Note:* Proceed to next step only when the `PHASE` displays as `Succeeded`.
 
 ==== Create the NodeFeatureDiscovery Instance
 Installing the operator only deploys the controller. To deploy the daemonsets that actually scan your nodes for hardware features, create the Custom Resource.
@@ -137,15 +135,10 @@ oc describe node <your-worker-node-name> | grep feature.node.kubernetes.io
 
 === Deploy the NVIDIA GPU Operator:
 
-Deploy the NVIDIA GPU Operator: With NFD labeling your nodes, deploy the GPU operator to inject the drivers.
+With NFD labeling your nodes, deploy the GPU operator to inject the drivers.
 
-This guide walks through deploying the certified NVIDIA GPU Operator. It includes real-world management tactics for dealing with Operator Lifecycle Manager (OLM) quirks, dynamic channel selection, and strict Custom Resource schemas.
-
-==== Prerequisites
-* Node Feature Discovery (NFD) must be installed and running.
-* OpenShift CLI (`oc`) installed.
-* Cluster-admin privileges.
-* _Note: You can install this operator without GPU nodes present. The driver daemonsets will simply remain unscheduled until a GPU node is added to the cluster._
+[NOTE]
+You can install this operator without GPU nodes present. The driver daemonsets will simply remain unscheduled until a GPU node is added to the cluster._
 
 === Installing the Operator
 
@@ -158,7 +151,7 @@ oc create namespace nvidia-gpu-operator
 ----
 
 ==== Create the OperatorGroup
-*Management Tactic:* Always use `oc create` with `generateName` rather than `oc apply` for OperatorGroups. OLM strictly tracks state; if you force a static name and the installation fails, OLM will silently refuse to process future updates in that namespace. Letting OpenShift generate the name prevents state collisions.
+
 
 [source,bash]
 ----
@@ -199,6 +192,8 @@ spec:
   sourceNamespace: openshift-marketplace
 EOF
 ----
+
+---
 
 ==== OLM Troubleshooting Tactics
 If the operator does not immediately install, OLM might be stuck. Use these commands to diagnose the silent failures:
@@ -271,7 +266,7 @@ _Note: If you have no GPU nodes, the pods responsible for the device plugin and 
 == Step 3: Deploy the Networking & Distributed Serving Layer
 
 To serve models securely and across multiple nodes, we need our certificates and distributed workload managers.
-This guide walks through deploying the certified `cert-manager Operator for Red Hat OpenShift`. This operator is a prerequisite for Red Hat OpenShift AI (RHOAI) 3.3, as RHOAI relies heavily on automated TLS certificate generation for its internal communication, webhooks, and model-serving components.
+RHOAI relies heavily on automated TLS certificate generation for its internal communication, webhooks, and model-serving components.
 
 === Installing the Cert-manager Operator
 
@@ -349,14 +344,10 @@ Once those pods are in a `Running` state, your cluster is fully capable of provi
 
 ---
 
-=== Install LeaderWorkerSet (LWS): (Required for llm-d distributed runtime). + 
+=== Install LeaderWorkerSet (LWS): (Required for llm-d distributed runtime). 
 
 
-This guide walks through deploying the Red Hat LeaderWorkerSet (LWS) Operator. In OpenShift AI 3.3, LWS is a critical dependency for distributed workloads, allowing large AI training and inference tasks to be split across multiple nodes and GPUs using a coordinated leader-worker pod topology.
-
-==== Prerequisites
-* OpenShift CLI (`oc`) installed.
-* Cluster-admin privileges.
+The Red Hat LeaderWorkerSet (LWS) Operator. In OpenShift AI 3.3, LWS is a dependency for distributed workloads, allowing large AI training and inference tasks to be split across multiple nodes and GPUs using a coordinated leader-worker pod topology.
 
 === Installing the Operator
 
@@ -453,14 +444,9 @@ Once these pods show a status of `Running`, the LeaderWorkerSet APIs are success
 
 ---
 
-== Installing the Red Hat Connectivity Link Operator
+=== Installing the Red Hat Connectivity Link Operator
 
 This guide walks through deploying the Red Hat Connectivity Link Operator. In OpenShift AI 3.3, this operator manages Kuadrant, which is strictly required if you want to expose Large Language Models (LLMs) securely using the Models-as-a-Service (MaaS) interface, enforce rate limits, and provide robust API governance.
-
-== Prerequisites
-* The `cert-manager Operator for Red Hat OpenShift` must be installed and running.
-* OpenShift CLI (`oc`) installed.
-* Cluster-admin privileges.
 
 === Installing the Operator
 
@@ -562,8 +548,6 @@ While LeaderWorkerSet handles the physical coordination of multi-node pods, Kueu
 
 Here is an important detail for this specific walkthrough: Because Kueue needs to watch for workloads submitted by data scientists across any project in the cluster, we must configure the OperatorGroup to use Cluster-wide tracking (by omitting the targetNamespaces block).
 
-This guide walks through deploying the Red Hat build of Kueue Operator. In OpenShift AI 3.3, Kueue is the core engine for workload management. It manages job queuing, fair resource sharing, and cluster quotas to ensure distributed AI workloads don't overwhelm available hardware.
-
 
 === Installing the Operator
 
@@ -654,22 +638,11 @@ Once these pods show a status of `Running`, Kueue is successfully registered on 
 ---
 
 
-== Install the Meta-Orchestrator (OpenShift AI)
+=== Install the Meta-Orchestrator (OpenShift AI)
 
 This guide walks through deploying the core Red Hat OpenShift AI Operator. This is the final step in the prerequisites phase for building a Models-as-a-Service (MaaS) solution. 
 
 IMPORTANT: This guide intentionally stops after installing the Operator. It does *not* deploy the `DataScienceCluster` (DSC) or `DSCInitialization` (DSCI) Custom Resources. Configuring the actual data science environment will be handled in the next section of this enablement journey.
-
-=== Prerequisites
-* All foundational operators must be installed and running:
-  ** Node Feature Discovery (NFD)
-  ** NVIDIA GPU Operator
-  ** cert-manager Operator for Red Hat OpenShift
-  ** LeaderWorkerSet (LWS)
-  ** Red Hat Connectivity Link (Kuadrant)
-  ** Red Hat build of Kueue
-* OpenShift CLI (`oc`) installed.
-* Cluster-admin privileges.
 
 === Installing the Operator
 
@@ -682,7 +655,6 @@ oc create namespace redhat-ods-operator
 ----
 
 ==== Create the OperatorGroup
-*Management Tactic:* RHOAI manages multiple secondary namespaces (like `redhat-ods-applications`). By using `oc create` and omitting the `targetNamespaces` block, we ensure the Operator Lifecycle Manager (OLM) deploys the operator with the required cluster-wide (`AllNamespaces`) permissions, while avoiding static naming conflicts.
 
 [source,bash]
 ----
@@ -696,7 +668,6 @@ EOF
 ----
 
 ==== Subscribe to the stable-3.3 Channel
-*Management Tactic:* Because we are building a highly specific MaaS stack, we want to pin the installation to the `stable-3.3` channel to ensure we get `rhods-operator.3.3.0` (or its immediate patches) rather than accidentally floating to a future major release that might introduce breaking changes to our MaaS architecture.
 
 [source,bash]
 ----
@@ -738,4 +709,4 @@ oc get pods -n redhat-ods-operator
 Once the `rhods-operator` pod shows a status of `Running`, the OpenShift AI APIs are successfully registered on your cluster. 
 
 == Next Steps
-You have successfully installed the RHOAI Operator! The cluster is now waiting for instructions. Proceed to the next page of this guide to create the `DSCInitialization` and `DataScienceCluster` Custom Resources, which will officially activate the Models-as-a-Service capabilities.
+You have successfully installed the RHOAI Operator! The cluster is now waiting for instructions. Proceed to the next page of this guide to create the `DataScienceCluster` Custom Resource, which will officially activate the Models-as-a-Service capabilities.
