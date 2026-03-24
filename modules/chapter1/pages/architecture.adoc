@@ -11,7 +11,7 @@ You cannot just click "Install" and expect magic. A factory requires an assembly
 
 In the previous module, we identified the distinct Operators required to build a Models-as-a-Service (MaaS) platform. However, Operators in OpenShift AI are not standalone, isolated applications; they are deeply intertwined controllers that rely on one another.
 
-This module combines the Architecture (where components live and how they communicate) with the Strategy (the strict order of operations required to activate them).
+This module combines the Architecture (where components live and how they communicate) with the Strategy (the order of operations required to activate them).
 
 == The Strategy: Order of Operations
 

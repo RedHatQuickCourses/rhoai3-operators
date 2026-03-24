@@ -33,7 +33,7 @@ Keep using Git for Subscriptions and for `DataScienceCluster` revisions—treat 
 
 == Troubleshooting — operator and control-plane class failures
 
-Symptoms below are **deliberately practical**; always cross-check with the *Installing* and *Managing OpenShift AI* PDFs in `rhoai33docs`.
+Symptoms below are **deliberately practical**; always cross-check with the *Installing and Managing OpenShift AI*  in the Red Hat OpenShift AI documentation. 
 
 === CSV stuck in `Pending` or `Installing`
 
