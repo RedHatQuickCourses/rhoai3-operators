@@ -50,10 +50,10 @@
     <a class="nav-link" href="architecture.html">Architecture &amp; data flow</a>
   </li>
   <li class="nav-item is-current-page" data-depth="1">
-    <a class="nav-link" href="lab0.html">Lab 0 — Command center</a>
+    <a class="nav-link" href="lab0.html">Lab 1 — Operator installation</a>
   </li>
   <li class="nav-item" data-depth="1">
-    <a class="nav-link" href="lab3-dsc.html">Lab 3 — DataScienceCluster</a>
+    <a class="nav-link" href="lab3-dsc.html">Lab 2 — DataScienceCluster</a>
   </li>
   <li class="nav-item" data-depth="1">
     <a class="nav-link" href="summary.html">Summary &amp; troubleshooting</a>
@@ -89,7 +89,7 @@
 <nav class="breadcrumbs" aria-label="breadcrumbs">
   <ul>
     <li><a href="../index.html">OpenShift Ecosystem & RHOAI 3x Control Plane</a></li>
-    <li><a href="lab0.html">Lab 0 — Command center</a></li>
+    <li><a href="lab0.html">Lab 1 — Operator installation</a></li>
   </ul>
 </nav>
 </div>
@@ -286,17 +286,8 @@ EOF</code></pre>
 </div>
 <div class="sect2">
 <h3 id="_deploy_the_nvidia_gpu_operator"><a class="anchor" href="#_deploy_the_nvidia_gpu_operator"></a>Deploy the NVIDIA GPU Operator:</h3>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>Deploy the NVIDIA GPU Operator: With NFD labeling your nodes, deploy the GPU operator to inject the drivers.<br></p>
-</li>
-</ol>
-</div>
 <div class="paragraph">
-<p>[= Battle-Tested Guide: Installing the NVIDIA GPU Operator in OpenShift
-:toc:
-:icons: font</p>
+<p>Deploy the NVIDIA GPU Operator: With NFD labeling your nodes, deploy the GPU operator to inject the drivers.</p>
 </div>
 <div class="paragraph">
 <p>This guide walks through deploying the certified NVIDIA GPU Operator. It includes real-world management tactics for dealing with Operator Lifecycle Manager (OLM) quirks, dynamic channel selection, and strict Custom Resource schemas.</p>
@@ -320,10 +311,9 @@ EOF</code></pre>
 </ul>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_installing_the_operator"><a class="anchor" href="#_installing_the_operator"></a>Installing the Operator</h4>
-
 </div>
+<div class="sect2">
+<h3 id="_installing_the_operator"><a class="anchor" href="#_installing_the_operator"></a>Installing the Operator</h3>
 <div class="sect3">
 <h4 id="_create_a_dedicated_namespace"><a class="anchor" href="#_create_a_dedicated_namespace"></a>Create a Dedicated Namespace</h4>
 <div class="paragraph">
@@ -336,7 +326,7 @@ EOF</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_create_the_operatorgroup_the_clean_state_method"><a class="anchor" href="#_create_the_operatorgroup_the_clean_state_method"></a>Create the OperatorGroup (The "Clean State" Method)</h4>
+<h4 id="_create_the_operatorgroup_2"><a class="anchor" href="#_create_the_operatorgroup_2"></a>Create the OperatorGroup</h4>
 <div class="paragraph">
 <p><strong>Management Tactic:</strong> Always use <code>oc create</code> with <code>generateName</code> rather than <code>oc apply</code> for OperatorGroups. OLM strictly tracks state; if you force a static name and the installation fails, OLM will silently refuse to process future updates in that namespace. Letting OpenShift generate the name prevents state collisions.</p>
 </div>
@@ -396,25 +386,26 @@ EOF</code></pre>
 <div class="paragraph">
 <p>If the operator does not immediately install, OLM might be stuck. Use these commands to diagnose the silent failures:</p>
 </div>
-<div class="paragraph">
+<div class="ulist">
+<ul>
+<li>
 <p><strong>Check if OLM registered the Subscription:</strong></p>
-</div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get subscription gpu-operator-certified -n nvidia-gpu-operator -o wide</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"> oc get subscription gpu-operator-certified -n nvidia-gpu-operator -o wide</code></pre>
 </div>
 </div>
-<div class="paragraph">
+</li>
+<li>
 <p><strong>Check if an InstallPlan was generated or failed:</strong></p>
-</div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get installplan -n nvidia-gpu-operator</code></pre>
 </div>
 </div>
-<div class="paragraph">
+</li>
+<li>
 <p><strong>Verify the ClusterServiceVersion (CSV) succeeded:</strong></p>
-</div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get csv -n nvidia-gpu-operator</code></pre>
@@ -422,6 +413,9 @@ EOF</code></pre>
 </div>
 <div class="paragraph">
 <p><em>Do not proceed to Part 3 until the CSV phase shows as <code>Succeeded</code>.</em></p>
+</div>
+</li>
+</ul>
 </div>
 </div>
 <div class="sect3">
@@ -498,9 +492,8 @@ oc get pods -n nvidia-gpu-operator</code></pre>
 <p>To serve models securely and across multiple nodes, we need our certificates and distributed workload managers.
 This guide walks through deploying the certified <code>cert-manager Operator for Red Hat OpenShift</code>. This operator is a prerequisite for Red Hat OpenShift AI (RHOAI) 3.3, as RHOAI relies heavily on automated TLS certificate generation for its internal communication, webhooks, and model-serving components.</p>
 </div>
-<div class="paragraph">
-<p>===Installing the Operator</p>
-</div>
+<div class="sect2">
+<h3 id="_installing_the_cert_manager_operator"><a class="anchor" href="#_installing_the_cert_manager_operator"></a>Installing the Cert-manager Operator</h3>
 <div class="sect3">
 <h4 id="_create_the_dedicated_namespace"><a class="anchor" href="#_create_the_dedicated_namespace"></a>Create the Dedicated Namespace</h4>
 <div class="paragraph">
@@ -513,10 +506,7 @@ This guide walks through deploying the certified <code>cert-manager Operator for
 </div>
 </div>
 <div class="sect3">
-<h4 id="_create_the_operatorgroup_the_clean_state_method_2"><a class="anchor" href="#_create_the_operatorgroup_the_clean_state_method_2"></a>Create the OperatorGroup (The "Clean State" Method)</h4>
-<div class="paragraph">
-<p><strong>Management Tactic:</strong> Always use <code>oc create</code> with <code>generateName</code> rather than <code>oc apply</code> for OperatorGroups. This prevents Operator Lifecycle Manager (OLM) state collisions by letting OpenShift safely generate a unique tracking ID, ensuring silent failures don&#8217;t block the installation.</p>
-</div>
+<h4 id="_create_the_operatorgroup_3"><a class="anchor" href="#_create_the_operatorgroup_3"></a>Create the OperatorGroup</h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt;EOF | oc create -f -
@@ -534,9 +524,6 @@ EOF</code></pre>
 </div>
 <div class="sect3">
 <h4 id="_dynamically_find_the_channel_and_subscribe_2"><a class="anchor" href="#_dynamically_find_the_channel_and_subscribe_2"></a>Dynamically Find the Channel and Subscribe</h4>
-<div class="paragraph">
-<p><strong>Management Tactic:</strong> Hardcoded channels are the number one reason automation scripts break over time. This snippet queries the <code>redhat-operators</code> catalog for the current default channel of the <code>openshift-cert-manager-operator</code> and injects it directly into the Subscription.</p>
-</div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Fetch the current default channel
@@ -568,8 +555,8 @@ EOF</code></pre>
 <p>Once the operator successfully installs, it will <strong>automatically</strong> generate a <code>CertManager</code> custom resource named <code>cluster</code> and spin up the actual certificate-issuing pods in a brand new, secondary namespace called <code>cert-manager</code>.</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_1_verify_the_operator_installed"><a class="anchor" href="#_1_verify_the_operator_installed"></a>1. Verify the Operator Installed</h3>
+<div class="sect3">
+<h4 id="_verify_the_operator_installed"><a class="anchor" href="#_verify_the_operator_installed"></a>Verify the Operator Installed</h4>
 <div class="paragraph">
 <p>Wait a few moments, then check the ClusterServiceVersion (CSV) to ensure the operator downloaded successfully.</p>
 </div>
@@ -582,8 +569,8 @@ EOF</code></pre>
 <p><strong>Note:</strong> Proceed to the next step only when the <code>PHASE</code> displays as <code>Succeeded</code>.</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_2_verify_the_operands_deployed_automatically"><a class="anchor" href="#_2_verify_the_operands_deployed_automatically"></a>2. Verify the Operands Deployed Automatically</h3>
+<div class="sect3">
+<h4 id="_verify_the_operands_deployed_automatically"><a class="anchor" href="#_verify_the_operands_deployed_automatically"></a>Verify the Operands Deployed Automatically</h4>
 <div class="paragraph">
 <p>Check the automatically created <code>cert-manager</code> namespace to ensure the controller, cainjector, and webhook pods are all initialized and running:</p>
 </div>
@@ -595,18 +582,16 @@ EOF</code></pre>
 <div class="paragraph">
 <p>Once those pods are in a <code>Running</code> state, your cluster is fully capable of provisioning and rotating its own internal TLS certificates. You are now ready to proceed with the Red Hat OpenShift AI 3.3 installation!</p>
 </div>
+<hr>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_install_leaderworkerset_lws_required_for_llm_d_distributed_runtime"><a class="anchor" href="#_install_leaderworkerset_lws_required_for_llm_d_distributed_runtime"></a>Install LeaderWorkerSet (LWS): (Required for llm-d distributed runtime).<br></h3>
 <div class="paragraph">
 <p>This guide walks through deploying the Red Hat LeaderWorkerSet (LWS) Operator. In OpenShift AI 3.3, LWS is a critical dependency for distributed workloads, allowing large AI training and inference tasks to be split across multiple nodes and GPUs using a coordinated leader-worker pod topology.</p>
 </div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_prerequisites_2"><a class="anchor" href="#_prerequisites_2"></a>Prerequisites</h2>
-<div class="sectionbody">
+<div class="sect3">
+<h4 id="_prerequisites_2"><a class="anchor" href="#_prerequisites_2"></a>Prerequisites</h4>
 <div class="ulist">
 <ul>
 <li>
@@ -619,11 +604,10 @@ EOF</code></pre>
 </div>
 </div>
 </div>
-<div class="sect1">
-<h2 id="_part_1_installing_the_operator"><a class="anchor" href="#_part_1_installing_the_operator"></a>Part 1: Installing the Operator</h2>
-<div class="sectionbody">
 <div class="sect2">
-<h3 id="_1_create_the_dedicated_namespace"><a class="anchor" href="#_1_create_the_dedicated_namespace"></a>1. Create the Dedicated Namespace</h3>
+<h3 id="_installing_the_operator_2"><a class="anchor" href="#_installing_the_operator_2"></a>Installing the Operator</h3>
+<div class="sect3">
+<h4 id="_create_the_dedicated_namespace_2"><a class="anchor" href="#_create_the_dedicated_namespace_2"></a>Create the Dedicated Namespace</h4>
 <div class="paragraph">
 <p>Red Hat requires the LWS operator to be installed in a specific namespace to function correctly.</p>
 </div>
@@ -633,11 +617,8 @@ EOF</code></pre>
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_2_create_the_operatorgroup_the_clean_state_method"><a class="anchor" href="#_2_create_the_operatorgroup_the_clean_state_method"></a>2. Create the OperatorGroup (The "Clean State" Method)</h3>
-<div class="paragraph">
-<p><strong>Management Tactic:</strong> We continue using <code>oc create</code> with <code>generateName</code>. This prevents Operator Lifecycle Manager (OLM) state collisions by letting OpenShift safely generate a unique tracking ID.</p>
-</div>
+<div class="sect3">
+<h4 id="_create_the_operatorgroup_4"><a class="anchor" href="#_create_the_operatorgroup_4"></a>Create the OperatorGroup</h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt;EOF | oc create -f -
@@ -653,10 +634,10 @@ EOF</code></pre>
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_3_dynamically_find_the_channel_and_subscribe"><a class="anchor" href="#_3_dynamically_find_the_channel_and_subscribe"></a>3. Dynamically Find the Channel and Subscribe</h3>
+<div class="sect3">
+<h4 id="_dynamically_find_the_channel_and_subscribe_3"><a class="anchor" href="#_dynamically_find_the_channel_and_subscribe_3"></a>Dynamically Find the Channel and Subscribe</h4>
 <div class="paragraph">
-<p><strong>Management Tactic:</strong> We query the <code>redhat-operators</code> catalog for the current default channel of the <code>lws-operator</code> package to ensure the installation doesn&#8217;t break when Red Hat releases new major versions.</p>
+<p>We query the <code>redhat-operators</code> catalog for the current default channel of the <code>lws-operator</code> package to ensure the installation doesn&#8217;t break when Red Hat releases new major versions.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -679,9 +660,11 @@ spec:
 EOF</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>===Deploying the LeaderWorkerSet Instance</p>
+<hr>
 </div>
+</div>
+<div class="sect2">
+<h3 id="_deploying_the_leaderworkerset_instance"><a class="anchor" href="#_deploying_the_leaderworkerset_instance"></a>Deploying the LeaderWorkerSet Instance</h3>
 <div class="sect3">
 <h4 id="_verify_the_operator_controller_installed"><a class="anchor" href="#_verify_the_operator_controller_installed"></a>Verify the Operator Controller Installed</h4>
 <div class="paragraph">
@@ -718,11 +701,8 @@ EOF</code></pre>
 </div>
 </div>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_verification_3"><a class="anchor" href="#_verification_3"></a>Verification</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_verification_3"><a class="anchor" href="#_verification_3"></a>Verification</h3>
 <div class="paragraph">
 <p>Once the Custom Resource is submitted, the operator will spin up the LWS controller pods that will eventually monitor and manage your distributed AI workloads.</p>
 </div>
@@ -736,6 +716,8 @@ EOF</code></pre>
 </div>
 <div class="paragraph">
 <p>Once these pods show a status of <code>Running</code>, the LeaderWorkerSet APIs are successfully registered on your cluster and ready to be used by Red Hat OpenShift AI.</p>
+</div>
+<hr>
 </div>
 </div>
 </div>
@@ -764,21 +746,20 @@ EOF</code></pre>
 </ul>
 </div>
 <div class="sect2">
-<h3 id="_installing_the_operator_2"><a class="anchor" href="#_installing_the_operator_2"></a>Installing the Operator</h3>
+<h3 id="_installing_the_operator_3"><a class="anchor" href="#_installing_the_operator_3"></a>Installing the Operator</h3>
+<div class="sect3">
+<h4 id="_create_the_dedicated_namespace_3"><a class="anchor" href="#_create_the_dedicated_namespace_3"></a>Create the Dedicated Namespace</h4>
 <div class="paragraph">
-<p>====Create the Dedicated Namespace
-Red Hat recommends installing the Connectivity Link operator and its subsequent Kuadrant resources into a dedicated <code>kuadrant-system</code> namespace.</p>
+<p>Red Hat recommends installing the Connectivity Link operator and its subsequent Kuadrant resources into a dedicated <code>kuadrant-system</code> namespace.</p>
 </div>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace kuadrant-system</code></pre>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_create_the_operatorgroup_the_clean_state_method_3"><a class="anchor" href="#_create_the_operatorgroup_the_clean_state_method_3"></a>Create the OperatorGroup (The "Clean State" Method)</h4>
-<div class="paragraph">
-<p><strong>Management Tactic:</strong> We continue using <code>oc create</code> with <code>generateName</code> to avoid Operator Lifecycle Manager (OLM) tracking conflicts.</p>
 </div>
+<div class="sect3">
+<h4 id="_create_the_operatorgroup_5"><a class="anchor" href="#_create_the_operatorgroup_5"></a>Create the OperatorGroup</h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt;EOF | oc create -f -
@@ -795,7 +776,7 @@ EOF</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_dynamically_find_the_channel_and_subscribe_3"><a class="anchor" href="#_dynamically_find_the_channel_and_subscribe_3"></a>Dynamically Find the Channel and Subscribe</h4>
+<h4 id="_dynamically_find_the_channel_and_subscribe_4"><a class="anchor" href="#_dynamically_find_the_channel_and_subscribe_4"></a>Dynamically Find the Channel and Subscribe</h4>
 <div class="paragraph">
 <p><strong>Management Tactic:</strong> We query the <code>redhat-operators</code> catalog for the current default channel of the <code>rhcl-operator</code> package to ensure the installation remains resilient across OpenShift major releases.</p>
 </div>
@@ -878,12 +859,10 @@ EOF</code></pre>
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc wait kuadrant/kuadrant --for="condition=Ready=true" -n kuadrant-system --timeout=300s</code></pre>
 </div>
 </div>
+<hr>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_installing_the_red_hat_build_of_kueue_operator"><a class="anchor" href="#_installing_the_red_hat_build_of_kueue_operator"></a>Installing the Red Hat build of Kueue Operator</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_installing_the_red_hat_build_of_kueue_operator"><a class="anchor" href="#_installing_the_red_hat_build_of_kueue_operator"></a>Installing the Red Hat build of Kueue Operator</h3>
 <div class="paragraph">
 <p>While LeaderWorkerSet handles the physical coordination of multi-node pods, Kueue is the "brain" that manages the actual job queues, quotas, and resource sharing. When multiple data science teams are submitting heavy AI workloads, Kueue ensures they don&#8217;t fight over the same GPUs. It holds jobs in a queue and only releases them to the cluster when the requested hardware (like our NFD-discovered GPUs) is actually available.</p>
 </div>
@@ -893,10 +872,11 @@ EOF</code></pre>
 <div class="paragraph">
 <p>This guide walks through deploying the Red Hat build of Kueue Operator. In OpenShift AI 3.3, Kueue is the core engine for workload management. It manages job queuing, fair resource sharing, and cluster quotas to ensure distributed AI workloads don&#8217;t overwhelm available hardware.</p>
 </div>
+</div>
 <div class="sect2">
-<h3 id="_installing_the_operator_3"><a class="anchor" href="#_installing_the_operator_3"></a>Installing the Operator</h3>
+<h3 id="_installing_the_operator_4"><a class="anchor" href="#_installing_the_operator_4"></a>Installing the Operator</h3>
 <div class="sect3">
-<h4 id="_create_the_dedicated_namespace_2"><a class="anchor" href="#_create_the_dedicated_namespace_2"></a>Create the Dedicated Namespace</h4>
+<h4 id="_create_the_dedicated_namespace_4"><a class="anchor" href="#_create_the_dedicated_namespace_4"></a>Create the Dedicated Namespace</h4>
 <div class="paragraph">
 <p>Red Hat&#8217;s official tracking namespace for the Kueue controller is <code>openshift-kueue-operator</code>.</p>
 </div>
@@ -924,7 +904,7 @@ EOF</code></pre>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_dynamically_find_the_channel_and_subscribe_4"><a class="anchor" href="#_dynamically_find_the_channel_and_subscribe_4"></a>Dynamically Find the Channel and Subscribe</h4>
+<h4 id="_dynamically_find_the_channel_and_subscribe_5"><a class="anchor" href="#_dynamically_find_the_channel_and_subscribe_5"></a>Dynamically Find the Channel and Subscribe</h4>
 <div class="paragraph">
 <p><strong>Management Tactic:</strong> We query the <code>redhat-operators</code> catalog for the current default channel of the <code>kueue-operator</code> package to ensure the install script dynamically adapts to future OpenShift versions.</p>
 </div>
@@ -1024,11 +1004,8 @@ This guide intentionally stops after installing the Operator. It does <strong>no
 </tr>
 </table>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_prerequisites_4"><a class="anchor" href="#_prerequisites_4"></a>Prerequisites</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_prerequisites_4"><a class="anchor" href="#_prerequisites_4"></a>Prerequisites</h3>
 <div class="ulist">
 <ul>
 <li>
@@ -1065,12 +1042,10 @@ This guide intentionally stops after installing the Operator. It does <strong>no
 </ul>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_part_1_installing_the_operator_2"><a class="anchor" href="#_part_1_installing_the_operator_2"></a>Part 1: Installing the Operator</h2>
-<div class="sectionbody">
 <div class="sect2">
-<h3 id="_1_create_the_dedicated_namespace_2"><a class="anchor" href="#_1_create_the_dedicated_namespace_2"></a>1. Create the Dedicated Namespace</h3>
+<h3 id="_installing_the_operator_5"><a class="anchor" href="#_installing_the_operator_5"></a>Installing the Operator</h3>
+<div class="sect3">
+<h4 id="_create_the_dedicated_namespace_5"><a class="anchor" href="#_create_the_dedicated_namespace_5"></a>Create the Dedicated Namespace</h4>
 <div class="paragraph">
 <p>Red Hat OpenShift AI requires its operator controller to be installed in the <code>redhat-ods-operator</code> namespace.</p>
 </div>
@@ -1080,8 +1055,8 @@ This guide intentionally stops after installing the Operator. It does <strong>no
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_2_create_the_operatorgroup"><a class="anchor" href="#_2_create_the_operatorgroup"></a>2. Create the OperatorGroup</h3>
+<div class="sect3">
+<h4 id="_create_the_operatorgroup_6"><a class="anchor" href="#_create_the_operatorgroup_6"></a>Create the OperatorGroup</h4>
 <div class="paragraph">
 <p><strong>Management Tactic:</strong> RHOAI manages multiple secondary namespaces (like <code>redhat-ods-applications</code>). By using <code>oc create</code> and omitting the <code>targetNamespaces</code> block, we ensure the Operator Lifecycle Manager (OLM) deploys the operator with the required cluster-wide (<code>AllNamespaces</code>) permissions, while avoiding static naming conflicts.</p>
 </div>
@@ -1097,8 +1072,8 @@ EOF</code></pre>
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_3_subscribe_to_the_stable_3_3_channel"><a class="anchor" href="#_3_subscribe_to_the_stable_3_3_channel"></a>3. Subscribe to the stable-3.3 Channel</h3>
+<div class="sect3">
+<h4 id="_subscribe_to_the_stable_3_3_channel"><a class="anchor" href="#_subscribe_to_the_stable_3_3_channel"></a>Subscribe to the stable-3.3 Channel</h4>
 <div class="paragraph">
 <p><strong>Management Tactic:</strong> Because we are building a highly specific MaaS stack, we want to pin the installation to the <code>stable-3.3</code> channel to ensure we get <code>rhods-operator.3.3.0</code> (or its immediate patches) rather than accidentally floating to a future major release that might introduce breaking changes to our MaaS architecture.</p>
 </div>
@@ -1121,12 +1096,10 @@ EOF</code></pre>
 </div>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_part_2_verification"><a class="anchor" href="#_part_2_verification"></a>Part 2: Verification</h2>
-<div class="sectionbody">
 <div class="sect2">
-<h3 id="_1_verify_the_operator_controller_installed"><a class="anchor" href="#_1_verify_the_operator_controller_installed"></a>1. Verify the Operator Controller Installed</h3>
+<h3 id="_verification_6"><a class="anchor" href="#_verification_6"></a>Verification</h3>
+<div class="sect3">
+<h4 id="_verify_the_operator_controller_installed_4"><a class="anchor" href="#_verify_the_operator_controller_installed_4"></a>Verify the Operator Controller Installed</h4>
 <div class="paragraph">
 <p>Wait a few moments for OLM to process the subscription, then check the ClusterServiceVersion (CSV) to ensure RHOAI downloaded successfully.</p>
 </div>
@@ -1140,8 +1113,8 @@ EOF</code></pre>
 <code>rhods-operator.3.3.0    Red Hat OpenShift AI    3.3.0 &#8230;&#8203; Succeeded</code></p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_2_verify_the_controller_pods_are_running"><a class="anchor" href="#_2_verify_the_controller_pods_are_running"></a>2. Verify the Controller Pods are Running</h3>
+<div class="sect3">
+<h4 id="_verify_the_controller_pods_are_running"><a class="anchor" href="#_verify_the_controller_pods_are_running"></a>Verify the Controller Pods are Running</h4>
 <div class="paragraph">
 <p>Check that the operator pod has successfully spun up in the namespace:</p>
 </div>
@@ -1156,6 +1129,7 @@ EOF</code></pre>
 </div>
 </div>
 </div>
+</div>
 <div class="sect1">
 <h2 id="_next_steps"><a class="anchor" href="#_next_steps"></a>Next Steps</h2>
 <div class="sectionbody">
@@ -1166,7 +1140,7 @@ EOF</code></pre>
 </div>
 <nav class="pagination">
   <span class="prev"><a href="architecture.html">Architecture &amp; data flow</a></span>
-  <span class="next"><a href="lab3-dsc.html">Lab 3 — DataScienceCluster</a></span>
+  <span class="next"><a href="lab3-dsc.html">Lab 2 — DataScienceCluster</a></span>
 </nav>
 </article>
   </div>
