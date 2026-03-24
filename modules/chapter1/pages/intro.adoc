@@ -13,7 +13,6 @@ The business mandate is to transition from consuming external foundation model t
 
 In OpenShift, this Models-as-a-Service (MaaS) foundation relies primarily on *Operators*. This module serves as a standalone guide to preparing your greenfield environment. By installing this specific combination of infrastructure, serving, and governance operators, you lay the groundwork required to run an OpenShift AI cluster with GPUs to deliver AI at scale.
 
-
 ---
 == Value: Why Rely on Operators?
 
@@ -22,7 +21,6 @@ Operators are software extensions for Kubernetes that act as automated administr
  * *The win:* You eliminate manual intervention for complex, day-two operational tasks like handling upgrades, reacting to failures, and managing backups.
 
  * *The benefits:* Operators ensure consistent, repeatable installations and provide constant health checks. Software vendors embed their domain-specific knowledge into the operator, meaning your AI platform handles complex failure recovery automatically.
-
 
 ---
 == Architecture: How Operators Work in OpenShift
@@ -37,6 +35,8 @@ OpenShift heavily utilizes Operators as a fundamental part of its architecture a
  * *Cluster vs. Add-on Operators:* OpenShift uses Cluster Operators (managed by the Cluster Version Operator) to run core system functions. For our AI platform, we will be installing optional Add-on Operators managed by the OLM.
 
 ---
+
+image::rhoai3-operators.png[align="center", title="OpenShift AI the Central Hub of Scalable AI"]
 
 == Strategy: The MaaS Operator Stack
 
