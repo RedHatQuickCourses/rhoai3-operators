@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Architecture &amp; Strategy: The MaaS Operator Fleet :: OpenShift Ecosystem &amp; RHOAI 3x Control Plane</title>
+    <title>Installation Strategy :: OpenShift Ecosystem &amp; RHOAI 3x Control Plane</title>
     <link rel="prev" href="../index.html">
     <link rel="next" href="lab0.html">
     <meta name="generator" content="Antora 3.1.3">
@@ -53,6 +53,9 @@
     <a class="nav-link" href="lab0.html">Lab 1 — Operator installation</a>
   </li>
   <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab0v1.html">old version of lab</a>
+  </li>
+  <li class="nav-item" data-depth="1">
     <a class="nav-link" href="lab3-dsc.html">Lab 2 — DataScienceCluster</a>
   </li>
   <li class="nav-item" data-depth="1">
@@ -98,11 +101,11 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">Architecture &amp; Strategy: The MaaS Operator Fleet</h1>
+<h1 class="page">Installation Strategy</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph lead">
-<p>You cannot just click "Install" and expect magic. A factory requires an assembly line.</p>
+<p>You cannot just click "Install" and expect magic.</p>
 </div>
 <div class="paragraph">
 <p>In the previous module, we identified the distinct Operators required to build a Models-as-a-Service (MaaS) platform. However, Operators in OpenShift AI are not standalone, isolated applications; they are deeply intertwined controllers that rely on one another.</p>
@@ -153,6 +156,9 @@
 <div class="paragraph">
 <p><strong>Node Feature Discovery (NFD) Operator</strong></p>
 </div>
+<div class="paragraph">
+<p>Detects hardware features on cluster nodes. This is absolutely required for scheduling NUMA-aware workloads and enabling GPU accelerators.</p>
+</div>
 <div class="ulist">
 <ul>
 <li>
@@ -161,13 +167,17 @@
 <li>
 <p>The Activation: You deploy a NodeFeatureDiscovery CR.</p>
 </li>
+<li>
+<p>How it works: This CR spins up daemonsets across your worker nodes to scan their PCIe buses and CPU flags. When it finds a GPU, it adds a specific Kubernetes label (e.g., feature.node.kubernetes.io/pci-10de.present=true) to that specific node.</p>
+</li>
 </ul>
 </div>
-<div class="paragraph">
-<p>How it works: This CR spins up daemonsets across your worker nodes to scan their PCIe buses and CPU flags. When it finds a GPU, it adds a specific Kubernetes label (e.g., feature.node.kubernetes.io/pci-10de.present=true) to that specific node.</p>
-</div>
+<hr>
 <div class="paragraph">
 <p><strong>NVIDIA GPU Operator</strong></p>
+</div>
+<div class="paragraph">
+<p>Depending on your hardware, you must install a specific operator to manage drivers and device plugins. Options include the NVIDIA GPU Operator, AMD GPU Operator, Intel Gaudi Base Operator, or IBM Spyre Operator.</p>
 </div>
 <div class="ulist">
 <ul>
@@ -182,6 +192,7 @@
 </li>
 </ul>
 </div>
+<hr>
 </div>
 <div class="sect2">
 <h3 id="_2_the_serving_governance_layer"><a class="anchor" href="#_2_the_serving_governance_layer"></a>2. The Serving &amp; Governance Layer</h3>
@@ -190,6 +201,9 @@
 </div>
 <div class="paragraph">
 <p><strong>Cert-manager Operator</strong></p>
+</div>
+<div class="paragraph">
+<p>Provides automated certificate provisioning, renewal, and retirement. This is required to secure KServe and distributed AI workloads.</p>
 </div>
 <div class="ulist">
 <ul>
@@ -201,8 +215,12 @@
 </li>
 </ul>
 </div>
+<hr>
 <div class="paragraph">
 <p><strong>Red Hat Connectivity Link Operator (Kuadrant)</strong></p>
+</div>
+<div class="paragraph">
+<p>Critical for MaaS. It provides Kubernetes-native authentication and authorization, intercepting incoming traffic to validate JSON web tokens (JWTs) and enforce security policies before requests ever reach your models.</p>
 </div>
 <div class="ulist">
 <ul>
@@ -212,13 +230,17 @@
 <li>
 <p>The Activation: You deploy a Kuadrant CR.</p>
 </li>
+<li>
+<p>How it works: This implements the Kubernetes Gateway API and Kuadrant authorization. When external traffic enters the cluster, this layer intercepts it, validates the user&#8217;s JSON Web Token (JWT), and enforces rate limits before the request ever reaches the OpenShift AI model controller.</p>
+</li>
 </ul>
 </div>
-<div class="paragraph">
-<p>How it works: This implements the Kubernetes Gateway API and Kuadrant authorization. When external traffic enters the cluster, this layer intercepts it, validates the user&#8217;s JSON Web Token (JWT), and enforces rate limits before the request ever reaches the OpenShift AI model controller.</p>
-</div>
+<hr>
 <div class="paragraph">
 <p><strong>LeaderWorkerSet (LWS) Operator</strong></p>
+</div>
+<div class="paragraph">
+<p>Essential for coordinating multi-node distributed inference pods. It is specifically required when deploying the high-performance Distributed Inference with the llm-d runtime.</p>
 </div>
 <div class="ulist">
 <ul>
@@ -230,11 +252,32 @@
 </li>
 </ul>
 </div>
+<hr>
+<div class="paragraph">
+<p><strong>Red Hat Build of Kueue Operator</strong></p>
+</div>
+<div class="paragraph">
+<p>Controls resource allocation, manages quotas across different teams, and prioritizes job scheduling to maximize GPU utilization and prevent cluster contention.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Namespace: fill this in</p>
+</li>
+<li>
+<p>How it works: fill this in</p>
+</li>
+</ul>
+</div>
+<hr>
 </div>
 <div class="sect2">
 <h3 id="_3_the_orchestration_layer"><a class="anchor" href="#_3_the_orchestration_layer"></a>3. The Orchestration Layer</h3>
 <div class="paragraph">
 <p><strong>Red Hat OpenShift AI Operator</strong></p>
+</div>
+<div class="paragraph">
+<p>The core meta-operator that manages the entire AI lifecycle platform. For MaaS capabilities, you must install version 3.3 or later.</p>
 </div>
 <div class="ulist">
 <ul>
@@ -245,12 +288,44 @@
 <p>Namespace (Data Plane): redhat-ods-applications</p>
 </li>
 <li>
-<p>The Activation: You deploy the DataScienceCluster (DSC) CR.</p>
+<p>The activation: You deploy the DataScienceCluster (DSC) CR.</p>
+</li>
+<li>
+<p>How it works: The DSC is the master switchboard. It contains a list of platform components (like kserve, dashboard, modelregistry). By setting a component&#8217;s management state to Managed inside the DSC YAML file, the OpenShift AI Operator automatically reaches out and configures everything needed in the data plane namespace.</p>
 </li>
 </ul>
 </div>
+<hr>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+<div class="title">Architectural Strictness &amp; MaaS Prerequisites</div>
 <div class="paragraph">
-<p>How it works: The DSC is the master switchboard. It contains a list of platform components (like kserve, dashboard, modelregistry). By setting a component&#8217;s management state to Managed inside the DSC YAML file, the OpenShift AI Operator automatically reaches out and configures everything needed in the data plane namespace.</p>
+<p>Models-as-a-Service (MaaS) introduces significant architectural changes and centralized governance requirements. Before executing this lab, you must adhere to the following constraints:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Support Status:</strong> MaaS is currently a Technology Preview feature in OpenShift AI 3.3. It is not supported by Red Hat production SLAs and is not recommended for production use.</p>
+</li>
+<li>
+<p><strong>Exact Versions:</strong> This deployment strictly requires OpenShift 4.19.9 or later, Red Hat OpenShift AI Operator v3.2 or later, and Red Hat Connectivity Link Operator v1.2 or later.</p>
+</li>
+<li>
+<p><strong>Service Mesh Conflicts:</strong> If your architecture utilizes the high-performance Distributed Inference with <code>llm-d</code> runtime, <strong>OpenShift Service Mesh v2 must not be installed</strong> on the cluster.</p>
+</li>
+<li>
+<p><strong>Strict Gateway Configurations:</strong> Gateway naming is hardcoded. The infrastructure requires a Gateway named exactly <code>maas-default-gateway</code> deployed specifically in the <code>openshift-ingress</code> namespace, using the <code>openshift.io/gateway-controller</code> GatewayClass. If you are using Distributed Inference with <code>llm-d</code>, a separate Gateway named <code>openshift-ai-inference</code> is also required in the same <code>openshift-ingress</code> namespace.</p>
+</li>
+</ul>
+</div>
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>

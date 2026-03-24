@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Lab 0 — Assembling the AI Engine Room :: OpenShift Ecosystem &amp; RHOAI 3x Control Plane</title>
+    <link rel="prev" href="lab0.html">
+    <link rel="next" href="lab3-dsc.html">
+    <meta name="description" content="Use the OpenShift Web Terminal and a declarative GitOps approach to install the foundational operators for the AI Factory.">
+    <meta name="generator" content="Antora 3.1.3">
+    <link rel="stylesheet" href="../../../_/css/site.css">
+    <script>var uiRootPath = '../../../_'</script>
+  </head>
+  <body class="article hands-on-lab">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://www.redhat.com" target="_blank"><img src="../../../_/img/redhat-logo.png" height="40px" alt="Red Hat"></a>
+      <a class="navbar-item" style="font-size: 24px; color: white" href="../../..">OpenShift Ecosystem &amp; RHOAI 3x Control Plane</a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-end">
+        <a class="navbar-item" href="https://github.com/RedHatQuickCourses/rhoai3-operators/issues" target="_blank">Report Issues</a>
+      </div>
+    </div>
+  </nav>
+</header>
+<div class="body">
+<div class="nav-container" data-component="rhoai3-operators" data-version="3.3">
+  <aside class="nav">
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+    <h3 class="title"><a href="../index.html">OpenShift Ecosystem &amp; RHOAI 3x Control Plane</a></h3>
+<ul class="nav-list">
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="../index.html">Home</a>
+  </li>
+</ul>
+  </li>
+  <li class="nav-item" data-depth="0">
+<ul class="nav-list">
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="architecture.html">Architecture &amp; data flow</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab0.html">Lab 1 — Operator installation</a>
+  </li>
+  <li class="nav-item is-current-page" data-depth="1">
+    <a class="nav-link" href="lab0v1.html">old version of lab</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab3-dsc.html">Lab 2 — DataScienceCluster</a>
+  </li>
+  <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="summary.html">Summary &amp; troubleshooting</a>
+  </li>
+</ul>
+  </li>
+</ul>
+  </nav>
+</div>
+<div class="nav-panel-explore" data-panel="explore">
+  <div class="context">
+    <span class="title">OpenShift Ecosystem &amp; RHOAI 3x Control Plane</span>
+    <span class="version">3.3</span>
+  </div>
+  <ul class="components">
+    <li class="component is-current">
+      <a class="title" href="../index.html">OpenShift Ecosystem & RHOAI 3x Control Plane</a>
+      <ul class="versions">
+        <li class="version is-current is-latest">
+          <a href="../index.html">3.3</a>
+        </li>
+      </ul>
+    </li>
+  </ul>
+</div>
+    </div>
+  </aside>
+</div>
+<main class="article">
+<div class="toolbar" role="navigation">
+<button class="nav-toggle"></button>
+  <a href="../index.html" class="home-link"></a>
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="../index.html">OpenShift Ecosystem & RHOAI 3x Control Plane</a></li>
+    <li><a href="lab0v1.html">old version of lab</a></li>
+  </ul>
+</nav>
+</div>
+  <div class="content">
+<aside class="toc sidebar" data-title="Contents" data-levels="2">
+  <div class="toc-menu"></div>
+</aside>
+<article class="doc">
+<h1 class="page">Lab 0 — Assembling the AI Engine Room</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph lead">
+<p><strong>It is time to apply configuration as code.</strong></p>
+</div>
+<div class="paragraph">
+<p>In this lab, you are a platform engineer tasked with bootstrapping a greenfield OpenShift cluster into a Models-as-a-Service (MaaS) factory [cite: 4558-4559]. While you could install these operators one by one through the OpenShift Web Console UI, real factories are built with automation and code[cite: 4560].</p>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_step_1_gain_cli_access_the_web_terminal"><a class="anchor" href="#_step_1_gain_cli_access_the_web_terminal"></a>Step 1: Gain CLI Access (The Web Terminal)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Before we can run our deployment scripts, we need a terminal connected to the cluster[cite: 4569].</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>[cite_start]Log in to the OpenShift Web Console as a cluster administrator[cite: 4570].</p>
+</li>
+<li>
+<p>Navigate to <strong>Ecosystem</strong> → <strong>Software Catalog</strong> (or OperatorHub)[cite: 4571].</p>
+</li>
+<li>
+<p>Search for <code>Web Terminal</code> and click the <strong>Red Hat Web Terminal</strong> card[cite: 4572].</p>
+</li>
+<li>
+<p>Click <strong>Install</strong> and accept the default settings[cite: 4573].</p>
+</li>
+<li>
+<p>Wait for the installation to succeed, then refresh the page[cite: 4574].</p>
+</li>
+<li>
+<p>Look at the top right of the OpenShift Web Console header. You will now see a command-line icon (<code>&gt;_</code>). [cite_start]Click it [cite: 4575-4576].</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>A terminal window will initialize at the bottom of your screen. Click start, and a pre-authenticated prompt will appear[cite: 4577]. Every command from here on is declarative.</p>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_step_2_lay_the_hardware_foundation_nfd_gpu"><a class="anchor" href="#_step_2_lay_the_hardware_foundation_nfd_gpu"></a>Step 2: Lay the Hardware Foundation (NFD &amp; GPU)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Now that you are in the terminal, we will use Kubernetes manifests (YAML) to instruct the Operator Lifecycle Manager (OLM) to subscribe to our required infrastructure operators[cite: 4579].</p>
+</div>
+<div class="sect2">
+<h3 id="_1_node_feature_discovery_nfd_operator"><a class="anchor" href="#_1_node_feature_discovery_nfd_operator"></a>1. Node Feature Discovery (NFD) Operator</h3>
+<div class="paragraph">
+<p>The NFD operator scans your nodes and applies specific hardware labels (e.g., highlighting that a node has an NVIDIA GPU). The GPU operators rely entirely on these labels to know where to install their drivers [cite: 4580-4581].</p>
+</div>
+<div class="paragraph">
+<p><strong>Create the Namespace:</strong> Always start with a fresh namespace to avoid OLM conflicts[cite: 4584].</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace openshift-nfd</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Create the OperatorGroup:</strong> Use <code>oc create</code> (not <code>oc apply</code>) with <code>generateName</code> to allow OLM to dynamically generate a unique name, preventing state conflicts [cite: 4586-4587].</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt;EOF | oc create -f -
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  generateName: openshift-nfd-
+  namespace: openshift-nfd
+spec:
+  targetNamespaces:
+    - openshift-nfd
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Create the Subscription:</strong> This subscribes the namespace to the Red Hat catalog, triggering the OLM to download and install the NFD Operator [cite: 4598-4599].</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt;EOF | oc create -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: nfd
+  namespace: openshift-nfd
+spec:
+  channel: "stable"
+  installPlanApproval: Automatic
+  name: nfd
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Create the Custom Resource:</strong> Installing the operator only deploys the controller. To deploy the daemonsets that actually scan your nodes for hardware features, create the Custom Resource [cite: 4617-4618].</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt;EOF | oc create -f -
+apiVersion: nfd.openshift.io/v1
+kind: NodeFeatureDiscovery
+metadata:
+  name: nfd-instance
+  namespace: openshift-nfd
+spec: {}
+EOF</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_2_nvidia_gpu_operator"><a class="anchor" href="#_2_nvidia_gpu_operator"></a>2. NVIDIA GPU Operator</h3>
+<div class="paragraph">
+<p>With NFD labeling your nodes, deploy the GPU operator to inject the drivers[cite: 4634].</p>
+</div>
+<div class="paragraph">
+<p><strong>Create a Dedicated Namespace:</strong> Always give the GPU operator its own namespace to prevent OLM tracking conflicts [cite: 4644-4645].</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace nvidia-gpu-operator</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Create the OperatorGroup:</strong> [source,bash]</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>cat &lt;&lt;EOF | oc create -f -
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  generateName: nvidia-gpu-operator-
+  namespace: nvidia-gpu-operator
+spec:
+  targetNamespaces:
+    - nvidia-gpu-operator
+EOF</pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Dynamically Find the Channel and Subscribe:</strong> Operator channels change as new versions are released. Hardcoding the channel often breaks automated scripts. This block dynamically queries the catalog for the correct default channel before creating the Subscription [cite: 4660-4663].</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">CHANNEL=$(oc get packagemanifest gpu-operator-certified -n openshift-marketplace -o jsonpath='{.status.defaultChannel}')
+
+cat &lt;&lt;EOF | oc create -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: gpu-operator-certified
+  namespace: nvidia-gpu-operator
+spec:
+  channel: "${CHANNEL}"
+  installPlanApproval: Automatic
+  name: gpu-operator-certified
+  source: certified-operators
+  sourceNamespace: openshift-marketplace
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Deploying the ClusterPolicy:</strong> The operator controller is running, but it does nothing until a <code>ClusterPolicy</code> is defined[cite: 4688]. You must explicitly define the required schema blocks and configure the runtime for OpenShift (<code>crio</code>) [cite: 4691-4692].</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt;EOF | oc create -f -
+apiVersion: nvidia.com/v1
+kind: ClusterPolicy
+metadata:
+  name: gpu-cluster-policy
+spec:
+  operator:
+    defaultRuntime: crio
+  driver:
+    enabled: true
+  toolkit:
+    enabled: true
+  devicePlugin:
+    enabled: true
+  dcgm:
+    enabled: true
+  dcgmExporter:
+    enabled: true
+  gfd:
+    enabled: true
+  nodeStatusExporter:
+    enabled: true
+  daemonsets: {}
+EOF</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_step_3_deploy_the_networking_distributed_serving_layer"><a class="anchor" href="#_step_3_deploy_the_networking_distributed_serving_layer"></a>Step 3: Deploy the Networking &amp; Distributed Serving Layer</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To serve models securely and across multiple nodes, we need our certificates and distributed workload managers [cite: 4723-4724].</p>
+</div>
+<div class="sect2">
+<h3 id="_1_cert_manager_operator"><a class="anchor" href="#_1_cert_manager_operator"></a>1. cert-manager Operator</h3>
+<div class="paragraph">
+<p>This operator is a prerequisite for RHOAI 3.3, as RHOAI relies heavily on automated TLS certificate generation for its internal communication and model-serving components[cite: 4726].</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace cert-manager-operator
+
+cat &lt;&lt;EOF | oc create -f -
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  generateName: openshift-cert-manager-
+  namespace: cert-manager-operator
+spec:
+  targetNamespaces:
+    - cert-manager-operator
+EOF
+
+CHANNEL=$(oc get packagemanifest openshift-cert-manager-operator -n openshift-marketplace -o jsonpath='{.status.defaultChannel}')
+
+cat &lt;&lt;EOF | oc create -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: openshift-cert-manager-operator
+  namespace: cert-manager-operator
+spec:
+  channel: "${CHANNEL}"
+  installPlanApproval: Automatic
+  name: openshift-cert-manager-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF</code></pre>
+</div>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="title">Autonomous Initialization</div>
+<div class="paragraph">
+<p>Unlike other operators that require you to manually define a Custom Resource to start the actual workload, the cert-manager Operator is designed to be autonomous out of the box [cite: 4758-4759]. It will automatically spin up the certificate-issuing pods in a secondary namespace called <code>cert-manager</code>[cite: 4760].</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_2_leaderworkerset_lws_operator"><a class="anchor" href="#_2_leaderworkerset_lws_operator"></a>2. LeaderWorkerSet (LWS) Operator</h3>
+<div class="paragraph">
+<p>LWS is a critical dependency for distributed workloads, allowing large AI training and inference tasks to be split across multiple nodes and GPUs using a coordinated leader-worker pod topology [cite: 4771-4772].</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace openshift-lws-operator
+
+cat &lt;&lt;EOF | oc create -f -
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  generateName: openshift-lws-operator-
+  namespace: openshift-lws-operator
+spec:
+  targetNamespaces:
+    - openshift-lws-operator
+EOF
+
+CHANNEL=$(oc get packagemanifest lws-operator -n openshift-marketplace -o jsonpath='{.status.defaultChannel}')
+
+cat &lt;&lt;EOF | oc create -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: lws-operator
+  namespace: openshift-lws-operator
+spec:
+  channel: "${CHANNEL}"
+  installPlanApproval: Automatic
+  name: lws-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Create the Custom Resource:</strong> Red Hat expects this specific Custom Resource to be named <code>cluster</code> [cite: 4815-4816].</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt;EOF | oc create -f -
+apiVersion: operator.openshift.io/v1
+kind: LeaderWorkerSetOperator
+metadata:
+  name: cluster
+  namespace: openshift-lws-operator
+spec:
+  managementState: Managed
+  logLevel: Normal
+  operatorLogLevel: Normal
+EOF</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_3_red_hat_connectivity_link_operator"><a class="anchor" href="#_3_red_hat_connectivity_link_operator"></a>3. Red Hat Connectivity Link Operator</h3>
+<div class="paragraph">
+<p>In OpenShift AI 3.3, this operator manages Kuadrant, which is strictly required if you want to expose LLMs securely using the MaaS interface and enforce rate limits[cite: 4834].</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace kuadrant-system
+
+cat &lt;&lt;EOF | oc create -f -
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  generateName: rhcl-operator-
+  namespace: kuadrant-system
+spec:
+  targetNamespaces:
+    - kuadrant-system
+EOF
+
+CHANNEL=$(oc get packagemanifest rhcl-operator -n openshift-marketplace -o jsonpath='{.status.defaultChannel}')
+
+cat &lt;&lt;EOF | oc create -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: rhcl-operator
+  namespace: kuadrant-system
+spec:
+  channel: "${CHANNEL}"
+  installPlanApproval: Automatic
+  name: rhcl-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Deploy the Kuadrant Instance:</strong> Passing an empty <code>spec: {}</code> tells the operator to deploy the most optimal default configuration [cite: 4878-4879].</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt;EOF | oc create -f -
+apiVersion: kuadrant.io/v1beta1
+kind: Kuadrant
+metadata:
+  name: kuadrant
+  namespace: kuadrant-system
+spec: {}
+EOF</code></pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_step_4_workload_coordination_kueue"><a class="anchor" href="#_step_4_workload_coordination_kueue"></a>Step 4: Workload Coordination (Kueue)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Kueue manages the actual job queues, quotas, and resource sharing. It holds jobs in a queue and only releases them to the cluster when the requested hardware is actually available [cite: 4896-4897].</p>
+</div>
+<div class="paragraph">
+<p><strong>Cluster-Wide Mode Tactic:</strong> Because Kueue needs to watch for workloads submitted by data scientists across <strong>any</strong> project in the cluster, we must configure the OperatorGroup to use Cluster-wide tracking (by omitting the <code>targetNamespaces</code> block) [cite: 4898, 4907-4908].</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace openshift-kueue-operator
+
+cat &lt;&lt;EOF | oc create -f -
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  generateName: openshift-kueue-operator-
+  namespace: openshift-kueue-operator
+EOF
+
+CHANNEL=$(oc get packagemanifest kueue-operator -n openshift-marketplace -o jsonpath='{.status.defaultChannel}')
+
+cat &lt;&lt;EOF | oc create -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: kueue-operator
+  namespace: openshift-kueue-operator
+spec:
+  channel: "${CHANNEL}"
+  installPlanApproval: Automatic
+  name: kueue-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Create the Kueue Custom Resource:</strong> [source,bash]</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>cat &lt;&lt;EOF | oc create -f -
+apiVersion: kueue.openshift.io/v1
+kind: Kueue
+metadata:
+  name: cluster
+  namespace: openshift-kueue-operator
+spec: {}
+EOF</pre>
+</div>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_step_5_install_the_meta_orchestrator_openshift_ai"><a class="anchor" href="#_step_5_install_the_meta_orchestrator_openshift_ai"></a>Step 5: Install the Meta-Orchestrator (OpenShift AI)</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This is the final step in the prerequisites phase for building a Models-as-a-Service (MaaS) solution[cite: 4958].</p>
+</div>
+<div class="paragraph">
+<p><strong>Management Tactic:</strong> Because we are building a highly specific MaaS stack, we want to pin the installation to the <code>stable-3.3</code> channel to ensure we get the correct operator version rather than accidentally floating to a future major release that might introduce breaking changes to our MaaS architecture [cite: 4983-4984].</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace redhat-ods-operator
+
+cat &lt;&lt;EOF | oc create -f -
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  generateName: redhat-ods-operator-
+  namespace: redhat-ods-operator
+EOF
+
+cat &lt;&lt;EOF | oc create -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: rhods-operator
+  namespace: redhat-ods-operator
+spec:
+  channel: "stable-3.3"
+  installPlanApproval: Automatic
+  name: rhods-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF</code></pre>
+</div>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>This guide intentionally stops after installing the Operator. It does not deploy the <code>DataScienceCluster</code> (DSC) or <code>DSCInitialization</code> (DSCI) Custom Resources [cite: 4959-4960]. Configuring the actual data science environment will be handled in the next section of this enablement journey[cite: 4961].</p>
+</div>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="lab0.html">Lab 1 — Operator installation</a></span>
+  <span class="next"><a href="lab3-dsc.html">Lab 2 — DataScienceCluster</a></span>
+</nav>
+</article>
+  </div>
+</main>
+</div>
+<footer class="footer">
+  <img src="../../../_/img/rhl-logo-red.png" height="40px" alt="Red Hat"  href="https://redhat.com" >
+</footer><script id="site-script" src="../../../_/js/site.js" data-ui-root-path="../../../_"></script>
+<script async src="../../../_/js/vendor/highlight.js"></script>
+  </body>
+</html>

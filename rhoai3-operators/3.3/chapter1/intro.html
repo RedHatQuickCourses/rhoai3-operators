@@ -51,6 +51,9 @@
     <a class="nav-link" href="lab0.html">Lab 1 — Operator installation</a>
   </li>
   <li class="nav-item" data-depth="1">
+    <a class="nav-link" href="lab0v1.html">old version of lab</a>
+  </li>
+  <li class="nav-item" data-depth="1">
     <a class="nav-link" href="lab3-dsc.html">Lab 2 — DataScienceCluster</a>
   </li>
   <li class="nav-item" data-depth="1">
@@ -97,22 +100,16 @@
 </aside>
 <article class="doc">
 <h1 class="page">The Operator Ecosystem for Models-as-a-Service</h1>
-<div id="preamble">
-<div class="sectionbody">
-<div class="paragraph lead">
-<p><strong>To produce AI tokens at scale, you need automated administrators. Welcome to the engine room.</strong></p>
-</div>
-</div>
-</div>
 <div class="sect1">
 <h2 id="_background"><a class="anchor" href="#_background"></a>Background</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The business mandate is to transition from consuming external foundation model tokens to producing your own tokens to power internal AI Agents, Applications, and Solutions. To deliver Large Language Models (LLMs) as a governed, shared resource across your enterprise, you must build a highly available, robust platform.</p>
+<p>The business mandate is to transition from consuming external foundation model tokens to producing your own tokens to power internal AI agents, applications, and solutions. To deliver Large Language Models (LLMs) as a governed, shared resource across your enterprise, you must build a highly available, robust platform.</p>
 </div>
 <div class="paragraph">
-<p>In OpenShift, this Models-as-a-Service (MaaS) foundation relies primarily on Operators. This module serves as a standalone guide to preparing your greenfield environment. By installing this specific combination of infrastructure, serving, and governance operators, you lay the groundwork required to run an OpenShift AI cluster with GPUs and deliver AI at scale.</p>
+<p>In OpenShift, this Models-as-a-Service (MaaS) foundation relies primarily on <strong>Operators</strong>. This module serves as a standalone guide to preparing your greenfield environment. By installing this specific combination of infrastructure, serving, and governance operators, you lay the groundwork required to run an OpenShift AI cluster with GPUs and deliver AI at scale.</p>
 </div>
+<hr>
 </div>
 </div>
 <div class="sect1">
@@ -131,6 +128,7 @@
 </li>
 </ul>
 </div>
+<hr>
 </div>
 </div>
 <div class="sect1">
@@ -152,13 +150,14 @@
 </li>
 </ul>
 </div>
+<hr>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_strategy_the_maas_operator_stack"><a class="anchor" href="#_strategy_the_maas_operator_stack"></a>Strategy: The MaaS Operator Stack</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>To build a generative AI application platform that provides AI Model Inference at scale, you need a highly specific combination of operators. We categorize these into three distinct layers:</p>
+<p>To build a generative AI application platform that provides AI Model Inference at scale, you need a specific combination of operators. We categorize these into three distinct layers:</p>
 </div>
 <div class="sect2">
 <h3 id="_1_core_infrastructure_operators"><a class="anchor" href="#_1_core_infrastructure_operators"></a>1. Core &amp; Infrastructure Operators</h3>
@@ -168,16 +167,16 @@
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Red Hat OpenShift AI Operator:</strong> The core meta-operator that manages the entire AI lifecycle platform. For MaaS capabilities, you must install version 3.3 or later.</p>
+<p><strong>Red Hat OpenShift AI Operator.</strong></p>
 </li>
 <li>
-<p><strong>Node Feature Discovery (NFD) Operator:</strong> Detects hardware features on cluster nodes. This is absolutely required for scheduling NUMA-aware workloads and enabling GPU accelerators.</p>
+<p><strong>Node Feature Discovery (NFD) Operator.</strong></p>
 </li>
 <li>
-<p><strong>Hardware Accelerator Operators:</strong> Depending on your hardware, you must install a specific operator to manage drivers and device plugins. Options include the NVIDIA GPU Operator, AMD GPU Operator, Intel Gaudi Base Operator, or IBM Spyre Operator.</p>
+<p><strong>Hardware Accelerator Operators.</strong></p>
 </li>
 <li>
-<p><strong>Cert-manager Operator:</strong> Provides automated certificate provisioning, renewal, and retirement. This is required to secure KServe and distributed AI workloads.</p>
+<p><strong>Cert-manager Operator.</strong></p>
 </li>
 </ul>
 </div>
@@ -190,10 +189,10 @@
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Red Hat Connectivity Link Operator (v1.2+):</strong> Critical for MaaS. It provides Kubernetes-native authentication and authorization, intercepting incoming traffic to validate JSON web tokens (JWTs) and enforce security policies before requests ever reach your models.</p>
+<p><strong>Red Hat Connectivity Link Operator (v1.2+).</strong></p>
 </li>
 <li>
-<p><strong>Leader Worker Set Operator:</strong> Essential for coordinating multi-node distributed inference pods. It is specifically required when deploying the high-performance Distributed Inference with the llm-d runtime.</p>
+<p><strong>Leader Worker Set Operator.</strong></p>
 </li>
 </ul>
 </div>
@@ -201,13 +200,20 @@
 <div class="sect2">
 <h3 id="_3_operators_for_distributed_workloads_rag"><a class="anchor" href="#_3_operators_for_distributed_workloads_rag"></a>3. Operators for Distributed Workloads &amp; RAG</h3>
 <div class="paragraph">
-<p>If your platform requires advanced job queuing or Retrieval-Augmented Generation (RAG) capabilities:</p>
+<p>If your platform requires advanced job queuing:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Red Hat build of Kueue Operator:</strong> Controls resource allocation, manages quotas across different teams, and prioritizes job scheduling to maximize GPU utilization and prevent cluster contention.</p>
+<p><strong>Red Hat build of Kueue Operator:</strong></p>
 </li>
+</ul>
+</div>
+<div class="paragraph">
+<p>or Retrieval-Augmented Generation (RAG) capabilities: (not part of this course)</p>
+</div>
+<div class="ulist">
+<ul>
 <li>
 <p><strong>Llama Stack Operator:</strong> Deploys and manages environments optimized for RAG and agentic workflows, integrating inference models with vector databases (like Milvus or pgvector).</p>
 </li>
@@ -222,8 +228,9 @@
 <div class="sect1">
 <h2 id="_lab_installing_the_openshift_ai_foundation"><a class="anchor" href="#_lab_installing_the_openshift_ai_foundation"></a>Lab: Installing the OpenShift AI Foundation</h2>
 <div class="sectionbody">
+<hr>
 <div class="paragraph">
-<p>In this lab, you are a platform engineer given a greenfield OpenShift environment. Your goal is to install the baseline OpenShift AI Operator and its immediate hardware dependencies so the cluster is ready for MaaS configuration.</p>
+<p>In the lab, you are a platform engineer given a greenfield OpenShift environment. Your goal is to install the baseline OpenShift AI Operator and its immediate hardware dependencies so the cluster is ready for MaaS configuration.</p>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -240,7 +247,7 @@
 <p>cluster-admin privileges.</p>
 </div>
 <div class="paragraph">
-<p>Worker nodes equipped with target hardware accelerators (e.g., GPUs).</p>
+<p>Worker nodes equipped with target hardware accelerators (e.g., GPUs). (required for phase 2)</p>
 </div>
 </td>
 </tr>
