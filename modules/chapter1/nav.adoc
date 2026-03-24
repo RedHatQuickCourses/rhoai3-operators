@@ -1,7 +1,6 @@
 // * xref:ROOT:index.adoc[Home — introduction & business value]
 * xref:architecture.adoc[Architecture & data flow]
 * xref:lab0.adoc[Lab 1 — Operator installation]
-* xref:lab0v1.adoc[old version of lab]
 //* xref:lab1-foundation.adoc[Lab 1 — Core & hardware discovery]
 //* xref:lab2-governance.adoc[Lab 2 — Governance dependencies]
 * xref:lab3-dsc.adoc[Lab 2 — DataScienceCluster]
