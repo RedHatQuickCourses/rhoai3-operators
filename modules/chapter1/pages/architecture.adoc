@@ -7,7 +7,7 @@
 :description: Strategic guide to the order of operations, namespaces, and Custom Resources needed to build the OpenShift AI MaaS platform.
 
 [.lead]
-You cannot just click "Install" and expect magic.
+*You cannot just click "Install" and expect magic.*
 
 In the previous module, we identified the distinct Operators required to build a Models-as-a-Service (MaaS) platform. However, Operators in OpenShift AI are not standalone, isolated applications; they are deeply intertwined controllers that rely on one another.
 
@@ -34,6 +34,7 @@ To avoid race conditions and deployment errors, follow a similar order of operat
 To activate an Operator's logic, you must supply it a configuration file called a Custom Resource (CR). The Architecture of your fleet is defined by which CRs you create and the specific namespaces they target.
 
 === 1. The Hardware Layer
+---
 
 *Node Feature Discovery (NFD) Operator*
 
@@ -60,6 +61,7 @@ Depending on your hardware, you must install a specific operator to manage drive
 ---
 
 === 2. The Serving & Governance Layer
+---
 
 To prevent "Denial of Wallet" attacks—where a threat actor or runaway script spams your expensive GPU-backed endpoints with massive inference requests—we must wrap the AI models in strict networking policies before they are deployed.
 
@@ -106,6 +108,7 @@ Controls resource allocation, manages quotas across different teams, and priorit
 ---                           
 
 === 3. The Orchestration Layer
+---
 
 *Red Hat OpenShift AI Operator*
 

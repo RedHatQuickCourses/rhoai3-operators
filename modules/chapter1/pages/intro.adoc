@@ -34,9 +34,11 @@ OpenShift heavily utilizes Operators as a fundamental part of its architecture a
 
  * *Cluster vs. Add-on Operators:* OpenShift uses Cluster Operators (managed by the Cluster Version Operator) to run core system functions. For our AI platform, we will be installing optional Add-on Operators managed by the OLM.
 
----
 
 image::rhoai3-operators.png[align="center", title="OpenShift AI the Central Hub of Scalable AI"]
+
+
+---
 
 == Strategy: The MaaS Operator Stack
 
