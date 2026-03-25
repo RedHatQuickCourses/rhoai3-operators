@@ -19,7 +19,12 @@ To execute this, we will first install the Red Hat Web Terminal Operator via the
 Access to an OpenShift cluster with cluster-admin privileges.
 ====
 
+
 == Step 1: Gain CLI Access (The Web Terminal)
+
+[NOTE]
+The Web Terminal Operator installs the DevWorkspace Operator as a dependency.
+
 
 Before we can run our deployment scripts, we need a terminal connected to the cluster.
 
@@ -35,11 +40,11 @@ Before we can run our deployment scripts, we need a terminal connected to the cl
 
 Launch the Terminal: Look at the top right of the OpenShift Web Console header. You will now see a command-line icon (>_). Click it.
 
-A terminal window will initialize at the bottom of your screen Click start, and a pre-authenticated prompt will appear.
+A terminal window will initialize at the bottom of your screen Click start, and a pre-authenticated prompt will appear. After the web terminal is initialized, you can use the preinstalled CLI tools like oc, kubectl, odo, kn, tkn, helm, and subctl in the web terminal. You can re-run commands by selecting them from the list of commands you have run in the terminal. 
 
 == Step 2: Lay the Hardware Foundation (NFD & GPU)
 
-Now that you are in the terminal, we will use Kubernetes manifests (YAML) to instruct the Operator Lifecycle Manager (OLM) to subscribe to our required infrastructure operators.
+Now that you are in the terminal, we will use Kubernetes manifests (YAML) to instruct the Operator Lifecycle Manager (OLM) to subscribe to our required infrastructure operators. 
 
 The NFD operator scans your nodes and applies specific hardware labels (e.g., highlighting that a node has an NVIDIA H100 or an AMD MI300X). The GPU operators rely entirely on these labels to know where to install their drivers.
 
