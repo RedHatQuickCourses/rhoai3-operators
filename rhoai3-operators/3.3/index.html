@@ -104,15 +104,18 @@
 <div class="sect2">
 <h3 id="_background"><a class="anchor" href="#_background"></a>Background</h3>
 <div class="paragraph">
-<p>The business mandate is to transition from consuming external foundation model tokens to producing your own tokens to power internal AI agents, applications, and solutions. To deliver Large Language Models (LLMs) as a governed, shared resource across your enterprise, you must build a highly available, robust platform.</p>
+<p>The business mandate is to transition from consuming external foundation model tokens to producing your own tokens to power internal AI agents, applications, and solutions. To deliver Large Language Models (LLMs) as a governed, shared resource across your enterprise, we must build a highly available, robust platform.</p>
 </div>
 <div class="paragraph">
 <p>In OpenShift, this Models-as-a-Service (MaaS) foundation relies primarily on <strong>Operators</strong>. This module serves as a standalone guide to preparing your greenfield environment. By installing this specific combination of infrastructure, serving, and governance operators, you lay the groundwork required to run an OpenShift AI cluster with GPUs to deliver AI at scale.</p>
 </div>
+<div class="paragraph">
+<p>This module provides an order of installation of the required operators to deploy an Red Hat OpenShift AI Platform.</p>
+</div>
 <hr>
 </div>
 <div class="sect2">
-<h3 id="_value_why_rely_on_operators"><a class="anchor" href="#_value_why_rely_on_operators"></a>Value: Why Rely on Operators?</h3>
+<h3 id="_why_rely_on_operators"><a class="anchor" href="#_why_rely_on_operators"></a>Why Rely on Operators?</h3>
 <div class="paragraph">
 <p>Operators are software extensions for Kubernetes that act as automated administrators. They encode human operational knowledge into software to manage applications and their components.</p>
 </div>
@@ -157,7 +160,7 @@
 <div class="sect2">
 <h3 id="_strategy_the_maas_operator_stack"><a class="anchor" href="#_strategy_the_maas_operator_stack"></a>Strategy: The MaaS Operator Stack</h3>
 <div class="paragraph">
-<p>To build a generative AI application platform that provides AI Model Inference at scale, you need a specific combination of operators. We categorize these into three distinct layers:</p>
+<p>To build a generative AI application platform that provides AI Model Inference at scale, we need a specific combination of operators. Let&#8217;s categorize these into three distinct layers:</p>
 </div>
 <div class="sect3">
 <h4 id="_1_core_infrastructure_operators"><a class="anchor" href="#_1_core_infrastructure_operators"></a>1. Core &amp; Infrastructure Operators</h4>
@@ -228,7 +231,7 @@
 <h3 id="_lab_installing_the_openshift_ai_foundation"><a class="anchor" href="#_lab_installing_the_openshift_ai_foundation"></a>Lab: Installing the OpenShift AI Foundation</h3>
 <hr>
 <div class="paragraph">
-<p>In the lab, you are a platform engineer given a greenfield OpenShift environment. Your goal is to install the baseline OpenShift AI Operator and its immediate hardware dependencies so the cluster is ready for MaaS configuration.</p>
+<p>In the lab, your goal is to install the baseline OpenShift AI Operator and its immediate hardware dependencies so the cluster is ready for MaaS configuration.</p>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -239,13 +242,13 @@
 <td class="content">
 <div class="title">Prerequisites:</div>
 <div class="paragraph">
-<p>Access to a greenfield OpenShift cluster.</p>
+<p>Access to an OpenShift cluster.</p>
 </div>
 <div class="paragraph">
 <p>cluster-admin privileges.</p>
 </div>
 <div class="paragraph">
-<p>Worker nodes equipped with target hardware accelerators (e.g., GPUs). (required for phase 2)</p>
+<p>Worker nodes equipped with accelerators (e.g., GPUs). (required for phase 2)</p>
 </div>
 </td>
 </tr>
