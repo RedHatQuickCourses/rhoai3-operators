@@ -181,6 +181,8 @@ The Web Terminal Operator installs the DevWorkspace Operator as a dependency.
 <div class="paragraph">
 <p>The NFD operator scans your nodes and applies specific hardware labels (e.g., highlighting that a node has an NVIDIA H100 or an AMD MI300X). The GPU operators rely entirely on these labels to know where to install their drivers.</p>
 </div>
+<hr>
+<hr>
 <div class="sect2">
 <h3 id="_procedure_install_the_nfd_operator"><a class="anchor" href="#_procedure_install_the_nfd_operator"></a>Procedure: Install the NFD Operator</h3>
 <div class="sect3">
@@ -290,6 +292,7 @@ EOF</code></pre>
 <div class="paragraph">
 <p><strong>The GenAI Value:</strong> NFD is the foundation of hardware governance. By labeling your nodes, NFD allows you to subsequently deploy the NVIDIA or AMD operators and configure precise Hardware Profiles. This prevents developers from accidentally scheduling an expensive H100 GPU for a simple CPU-bound data preprocessing task.</p>
 </div>
+<hr>
 <hr>
 </div>
 </div>
@@ -580,6 +583,7 @@ EOF</code></pre>
 <p>Once those pods are in a <code>Running</code> state, your cluster is fully capable of provisioning and rotating its own internal TLS certificates. You are now ready to proceed with the Red Hat OpenShift AI 3.3 installation!</p>
 </div>
 <hr>
+<hr>
 </div>
 </div>
 <div class="sect2">
@@ -702,6 +706,7 @@ EOF</code></pre>
 <p>Once these pods show a status of <code>Running</code>, the LeaderWorkerSet APIs are successfully registered on your cluster and ready to be used by Red Hat OpenShift AI.</p>
 </div>
 <hr>
+<hr>
 </div>
 <div class="sect2">
 <h3 id="_installing_the_red_hat_connectivity_link_operator"><a class="anchor" href="#_installing_the_red_hat_connectivity_link_operator"></a>Installing the Red Hat Connectivity Link Operator</h3>
@@ -823,6 +828,7 @@ EOF</code></pre>
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc wait kuadrant/kuadrant --for="condition=Ready=true" -n kuadrant-system --timeout=300s</code></pre>
 </div>
 </div>
+<hr>
 <hr>
 </div>
 <div class="sect2">
