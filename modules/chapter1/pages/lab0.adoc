@@ -48,6 +48,9 @@ Now that you are in the terminal, we will use Kubernetes manifests (YAML) to ins
 
 The NFD operator scans your nodes and applies specific hardware labels (e.g., highlighting that a node has an NVIDIA H100 or an AMD MI300X). The GPU operators rely entirely on these labels to know where to install their drivers.
 
+---
+---
+
 === Procedure: Install the NFD Operator
 
 ==== Create the Namespace
@@ -136,6 +139,7 @@ oc describe node <your-worker-node-name> | grep feature.node.kubernetes.io
 
 **The GenAI Value:** NFD is the foundation of hardware governance. By labeling your nodes, NFD allows you to subsequently deploy the NVIDIA or AMD operators and configure precise Hardware Profiles. This prevents developers from accidentally scheduling an expensive H100 GPU for a simple CPU-bound data preprocessing task.
 
+---
 ---
 
 === Deploy the NVIDIA GPU Operator:
@@ -348,6 +352,7 @@ oc get pods -n cert-manager
 Once those pods are in a `Running` state, your cluster is fully capable of provisioning and rotating its own internal TLS certificates. You are now ready to proceed with the Red Hat OpenShift AI 3.3 installation!
 
 ---
+---
 
 === Install LeaderWorkerSet (LWS): (Required for llm-d distributed runtime). 
 
@@ -448,6 +453,7 @@ oc get pods -n openshift-lws-operator
 Once these pods show a status of `Running`, the LeaderWorkerSet APIs are successfully registered on your cluster and ready to be used by Red Hat OpenShift AI.
 
 ---
+---
 
 === Installing the Red Hat Connectivity Link Operator
 
@@ -545,6 +551,7 @@ You can also explicitly verify that the Kuadrant system successfully initialized
 oc wait kuadrant/kuadrant --for="condition=Ready=true" -n kuadrant-system --timeout=300s
 ----
 
+---
 ---
 
 === Installing the Red Hat build of Kueue Operator
