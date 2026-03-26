@@ -9,12 +9,15 @@
 
 == Background
 
-The business mandate is to transition from consuming external foundation model tokens to producing your own tokens to power internal AI agents, applications, and solutions. To deliver Large Language Models (LLMs) as a governed, shared resource across your enterprise, you must build a highly available, robust platform.
+The business mandate is to transition from consuming external foundation model tokens to producing your own tokens to power internal AI agents, applications, and solutions. To deliver Large Language Models (LLMs) as a governed, shared resource across your enterprise, we must build a highly available, robust platform.
 
 In OpenShift, this Models-as-a-Service (MaaS) foundation relies primarily on *Operators*. This module serves as a standalone guide to preparing your greenfield environment. By installing this specific combination of infrastructure, serving, and governance operators, you lay the groundwork required to run an OpenShift AI cluster with GPUs to deliver AI at scale.
 
+This module provides an order of installation of the required operators to deploy an Red Hat OpenShift AI Platform. 
+
 ---
-== Value: Why Rely on Operators?
+
+== Why Rely on Operators?
 
 Operators are software extensions for Kubernetes that act as automated administrators. They encode human operational knowledge into software to manage applications and their components.
 
@@ -24,7 +27,6 @@ Operators are software extensions for Kubernetes that act as automated administr
 
 ---
 == Architecture: How Operators Work in OpenShift
-
 
 OpenShift heavily utilizes Operators as a fundamental part of its architecture and management model. To successfully configure your MaaS platform, you must understand these core concepts:
 
@@ -42,7 +44,7 @@ image::rhoai3-operators.png[align="center", title="OpenShift AI the Central Hub 
 
 == Strategy: The MaaS Operator Stack
 
-To build a generative AI application platform that provides AI Model Inference at scale, you need a specific combination of operators. We categorize these into three distinct layers:
+To build a generative AI application platform that provides AI Model Inference at scale, we need a specific combination of operators. Let's categorize these into three distinct layers:
 
 === 1. Core & Infrastructure Operators
 These operators provide the foundational hardware detection, acceleration, and overarching platform management.
@@ -76,14 +78,14 @@ or Retrieval-Augmented Generation (RAG) capabilities: (not part of this course)
 == Lab: Installing the OpenShift AI Foundation
 ---
 
-In the lab, you are a platform engineer given a greenfield OpenShift environment. Your goal is to install the baseline OpenShift AI Operator and its immediate hardware dependencies so the cluster is ready for MaaS configuration.
+In the lab, your goal is to install the baseline OpenShift AI Operator and its immediate hardware dependencies so the cluster is ready for MaaS configuration.
 
 [IMPORTANT]
 .Prerequisites:
 ====
-Access to a greenfield OpenShift cluster.
+Access to an OpenShift cluster.
 
 cluster-admin privileges.
 
-Worker nodes equipped with target hardware accelerators (e.g., GPUs). (required for phase 2)
+Worker nodes equipped with accelerators (e.g., GPUs). (required for phase 2)
 ====
