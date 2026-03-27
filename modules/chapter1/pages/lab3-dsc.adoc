@@ -1,8 +1,8 @@
-= Activating OpenShift AI: DSCI and DataScienceCluster Configuration
+= DSCI and DataScienceCluster Configuration
 
 Installing the Red Hat OpenShift AI (RHOAI) Operator only deploys the controller. To actually build your Models-as-a-Service (MaaS) environment, you must configure two core Custom Resources: `DSCInitialization` (DSCI) and `DataScienceCluster` (DSC).
 
-== Part 1: Understanding DSCInitialization (DSCI)
+== Understanding DSCInitialization (DSCI)
 
 When the RHOAI Operator spins up, it automatically creates a default `DSCInitialization` resource named `default-dsci`. 
 
@@ -19,16 +19,20 @@ While you rarely need to create this from scratch, understanding its configurati
 oc get dsci default-dsci -o yaml
 ----
 
-=== Configuring the DataScienceCluster (DSC)
+
+
+== Configuring the DataScienceCluster (DSC)
 
 The `DataScienceCluster` is the master toggle switch for your AI platform. By default, the operator might create a basic one, but for a true Models-as-a-Service (MaaS) architecture leveraging the advanced operators we installed earlier, we need to apply a highly specific configuration.
 
 === The MaaS Configuration Strategy
 For a modern MaaS stack, we need to ensure the following components are strictly managed:
-* **KServe:** The core model-serving engine.
-* **CodeFlare & Kueue:** For distributed workload and job queue management.
-* **Dashboard:** The UI for your data scientists.
-* **Ray:** For distributed compute execution.
+
+ * **KServe:** The core model-serving engine.
+ * **Kueue:** For distributed workload and job queue management, set to Unmanaged.
+ * **Dashboard:** The UI for your data scientists.
+ * **Leader Worker Set:** For distributed compute execution.
+
 
 === Applying the MaaS DataScienceCluster
 This YAML configuration enables the required MaaS components while safely ignoring legacy or unused tools (like ModelMesh, which is typically for smaller, edge-scale models).
@@ -75,7 +79,7 @@ spec:
 EOF
 ----
 
-== Part 3: Verification
+== Verification
 
 Applying the `DataScienceCluster` triggers the RHOAI operator to orchestrate a massive rollout across your cluster. It will create new namespaces (like `redhat-ods-applications`), configure the Service Mesh control plane, and spin up the KServe and Kuadrant integrations.
 

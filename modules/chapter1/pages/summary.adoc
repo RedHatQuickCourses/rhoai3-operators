@@ -1,72 +1,71 @@
-= Summary, handoff & troubleshooting
-:navtitle: Summary & troubleshooting
+= Course Conclusion: The MaaS Operator Foundation
+:navtitle: Course Summary
 :toc: macro
 
 :page-role: module-conclusion
-:description: Phase 0 completion checklist, handoff to storage/registry/catalog modules, and operator-level break-fix patterns.
+:description: Final checklist and strategic review of the Operators deployed to build the OpenShift AI MaaS platform.
 
-[.lead]
-*The machinery is wired. Now organize the supply chain—data, models, profiles—not more operators.*
+Congratulations! You have successfully laid the groundwork required to run a high-availability OpenShift AI cluster. By transitioning from manual configurations to automated, operator-driven infrastructure, you have built a system capable of producing AI tokens at scale.
 
-== Infrastructure checkpoint
+== The "MaaS Factory" Architecture Recap
 
-Before leaving Phase 0, confirm:
+Building this foundation required a strict order of operations. Let's review the stack you have assembled:
 
-* [x] **Web Terminal** — browser `oc` works for GitOps execution.
-* [x] **Red Hat OpenShift AI** operator CSV **Succeeded** in `redhat-ods-operator`.
-* [x] **NFD** workers running; nodes expose accelerator labels after GPU operator install (GPU operator is usually a separate subscription—follow *Working with accelerators* in docs).
-* [x] **cert-manager** CSV **Succeeded** in `cert-manager-operator`.
-* [x] **Connectivity Link** CSV **Succeeded** in `openshift-operators`.
-* [x] **`DataScienceCluster`** status **Ready**; dashboard route resolves.
-* [x] **Leader Worker Set** CSV **Succeeded** (if you completed Lab 4).
+1. **The Hardware Layer:** The Node Feature Discovery (NFD) operator scans your nodes and applies specific hardware labels. The GPU operator watches for these NFD labels to inject specific driver daemonsets and device plugins.
+2. **The Networking & Governance Layer:** You deployed the Cert-manager operator to automatically provision and rotate TLS certificates. You also installed the Red Hat Connectivity Link operator to manage Kuadrant, which intercepts incoming traffic to validate JSON web tokens (JWTs) and enforce rate limits.
+3. **The Workload Coordination Layer:** The LeaderWorkerSet (LWS) operator was deployed to coordinate multi-node distributed inference pods. You also integrated Kueue to act as a traffic controller that holds jobs in a queue until the required hardware is available.
+4. **The Orchestrator:** Finally, you deployed the Red Hat OpenShift AI Operator to manage the overarching AI lifecycle platform.
 
-== Handoff — what to run next
+== The Deployment Matrix
 
-You are ready for **Phase 1 — Assembling the factory** in the broader journey:
+As you troubleshoot or expand this platform, use this matrix to recall how each operator functions and is activated via its specific Custom Resource (CR) and namespace architecture.
 
-. **Storage / data connections** — bind object storage without credential sprawl.
-. **Model registry** — connect backing database; govern artifact promotion.
-. **Model catalog** — curate what developers may deploy.
-. **Hardware profiles & Kueue** — turn labeled GPUs into **shared** capacity with queues.
+[cols="1,1,2", options="header"]
+|===
+|Goal |Operator |Implementation Detail
 
-Keep using Git for Subscriptions and for `DataScienceCluster` revisions—treat the console as a **read-only dashboard**, not the source of truth.
+|*Prerequisite CLI Access*
+|Web Terminal
+|Installed via the UI to provide a secure, in-cluster command-line interface directly within the browser.
 
-== Troubleshooting — operator and control-plane class failures
+|*Hardware Discovery*
+|Node Feature Discovery (NFD)
+|Activated by the `NodeFeatureDiscovery` CR to spin up daemonsets across worker nodes.
 
-Symptoms below are **deliberately practical**; always cross-check with the *Installing and Managing OpenShift AI*  in the Red Hat OpenShift AI documentation. 
+|*Hardware Acceleration*
+|NVIDIA GPU Operator
+|Activated by the `ClusterPolicy` CR to manage drivers based on NFD labels.
 
-=== CSV stuck in `Pending` or `Installing`
+|*Automated TLS/Certificates*
+|Cert-Manager Operator
+|Autonomous out-of-the-box. Automatically generates a `CertManager` CR to provision and rotate certificates.
 
-* **Cause:** Image pull, missing OperatorGroup, or manual InstallPlan not approved.
-* **Checks:** `oc get installplan -n <operator-ns>`, `oc describe csv -n <operator-ns> <csv-name>`.
-* **Fix pattern:** Approve InstallPlan, fix pull secrets for disconnected clusters, verify CatalogSource health (`oc get catalogsource -n openshift-marketplace`).
+|*Security & Rate Limiting*
+|Connectivity Link (Kuadrant)
+|Installed in `kuadrant-system` and activated by an empty `Kuadrant` CR spec for optimal defaults.
 
-=== Subscription reports `ConstraintsNotSatisfiable`
+|*Job Queuing & Scheduling*
+|Red Hat build of Kueue
+|Provides central workload scheduling, job queues, and quota management to prevent GPU contention.
 
-* **Cause:** Channel/catalog mismatch or conflicting installed operators.
-* **Fix:** Align `channel` with documentation for your OpenShift + RHOAI combination; remove obsolete CatalogSources if your platform team rotated them.
+|*Distributed Computing*
+|LeaderWorkerSet (LWS)
+|Activated by a `LeaderWorkerSetOperator` CR named `cluster` to manage distributed runtime pods.
 
-=== `DataScienceCluster` never reaches `Ready`
+|*The Orchestrator*
+|Red Hat OpenShift AI
+|Installed in `redhat-ods-operator`. Remains dormant until activated by the `DataScienceCluster` (DSC) and `DSCInitialization` (DSCI) CRs in Phase 1.
+|===
 
-* **Cause:** Unsatisfied component dependencies (for example serving prerequisites), storage class issues for PVCs, or invalid `managementState` combinations.
-* **Checks:** `oc describe datasciencecluster default-dsc`, operator logs in `redhat-ods-operator`, and component namespaces for CrashLoop pods.
-* **Fix:** Fix the **first** failing component in status—downstream errors are often noise.
+== Your Phase 0 Final Checklist
 
-=== Dashboard / gateway routes — HTTP 404 or TLS errors
+Before moving on to the data science configuration, confirm your infrastructure is healthy:
 
-* **404:** Route exists but backing service not ready—finish CSV/DSC reconciliation first.
-* **TLS:** cert-manager not installed or issuer not configured for the serving stack—revisit xref:lab2-governance.adoc[Lab 2].
-* **Corporate MITM proxies:** Clients may need trust anchors; that is an enterprise PKI problem, not an AI model problem.
+* [ ] **Discovery:** NFD master and worker pods are running. Worker nodes expose accelerator labels.
+* [ ] **Operator Health:** All operator ClusterServiceVersions (CSVs) in their respective namespaces show a phase of `Succeeded`.
+* [ ] **Autonomy:** Cert-manager automatically generated a `CertManager` custom resource. It successfully spun up pods in the `cert-manager` namespace.
+* [ ] **Control Plane Readiness:** The `rhods-operator` pod is running in the `redhat-ods-operator` namespace, waiting for your commands.
 
-=== Kuadrant / gateway pods missing
+== Activating the Data Plane
 
-* **Cause:** Connectivity Link not finished installing, or namespace changed between versions.
-* **Fix:** Verify CSV, then search cluster-wide (`oc get pods -A | grep -i kuadrant`). Consult *Govern LLM access with Models-as-a-Service* for the exact namespace layout for your release.
-
-[NOTE]
-====
-When in doubt, **reduce the problem**: uninstall the last operator added, confirm cluster stability, reinstall on the documented channel, then reapply `DataScienceCluster` only after all prerequisites are green.
-====
-
-[.text-center]
-**Phase 0 — Operator foundation complete**
+Red Hat OpenShift AI depencies are complete, and you are ready for Phase 1 — Assembling the factory. 
