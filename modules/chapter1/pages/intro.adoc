@@ -42,7 +42,7 @@ image::rhoai3-operators.png[align="center", title="OpenShift AI the Central Hub 
 
 ---
 
-== Strategy: The MaaS Operator Stack
+== The MaaS Operator Stack
 
 To build a generative AI application platform that provides AI Model Inference at scale, we need a specific combination of operators. Let's categorize these into three distinct layers:
 

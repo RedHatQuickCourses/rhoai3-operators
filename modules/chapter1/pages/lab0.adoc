@@ -222,8 +222,9 @@ oc get installplan -n nvidia-gpu-operator
 +
 [source,bash]
 oc get csv -n nvidia-gpu-operator
-+
-_Do not proceed to Part 3 until the CSV phase shows as `Succeeded`._
+
+[WARNING]
+Do not proceed until the CSV phase shows as `Succeeded`.
 
 ==== Deploying the ClusterPolicy
 The operator controller is running, but it does nothing until a `ClusterPolicy` is defined. 
@@ -650,9 +651,9 @@ Once these pods show a status of `Running`, Kueue is successfully registered on 
 ---
 
 
-=== Install the Meta-Orchestrator (OpenShift AI)
+=== Install OpenShift AI Operator
 
-This guide walks through deploying the core Red Hat OpenShift AI Operator. This is the final step in the prerequisites phase for building a Models-as-a-Service (MaaS) solution. 
+This section walks through deploying the core Red Hat OpenShift AI Operator. This is the final step in the prerequisites phase for building a Models-as-a-Service (MaaS) solution. 
 
 IMPORTANT: This guide intentionally stops after installing the Operator. It does *not* deploy the `DataScienceCluster` (DSC) or `DSCInitialization` (DSCI) Custom Resources. Configuring the actual data science environment will be handled in the next section of this enablement journey.
 
