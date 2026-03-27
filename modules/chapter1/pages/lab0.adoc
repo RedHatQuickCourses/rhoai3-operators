@@ -463,11 +463,11 @@ This guide walks through deploying the Red Hat Connectivity Link Operator. In Op
 === Installing the Operator
 
 ==== Create the Dedicated Namespace
-Red Hat recommends installing the Connectivity Link operator and its subsequent Kuadrant resources into a dedicated `kuadrant-system` namespace.
+Red Hat recommends installing the Connectivity Link operator and its subsequent Kuadrant resources into a dedicated `openshift-operators` namespace.
 
 [source,bash]
 ----
-oc create namespace kuadrant-system
+oc create namespace openshift-operators
 ----
 
 ==== Create the OperatorGroup
@@ -479,10 +479,10 @@ apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
   generateName: rhcl-operator-
-  namespace: kuadrant-system
+  namespace: openshift-operators
 spec:
   targetNamespaces:
-  - kuadrant-system
+  - openshift-operators
 EOF
 ----
 
@@ -500,7 +500,7 @@ apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
   name: rhcl-operator
-  namespace: kuadrant-system
+  namespace: openshift-operators
 spec:
   channel: "${CHANNEL}"
   installPlanApproval: Automatic
@@ -517,7 +517,7 @@ Wait a few moments, then check the ClusterServiceVersion (CSV) to ensure the ope
 
 [source,bash]
 ----
-oc get csv -n kuadrant-system
+oc get csv -n openshift-operators
 ----
 *Note:* Proceed to the next step only when the `PHASE` displays as `Succeeded`.
 
@@ -531,7 +531,7 @@ apiVersion: kuadrant.io/v1beta1
 kind: Kuadrant
 metadata:
   name: kuadrant
-  namespace: kuadrant-system
+  namespace: openshift-operators
 spec: {}
 EOF
 ----
@@ -543,13 +543,13 @@ Once the Custom Resource is submitted, the operator will spin up the Kuadrant co
 Watch the pods spin up and ensure they transition to a `Running` state:
 [source,bash]
 ----
-oc get pods -n kuadrant-system -w
+oc get pods -n openshift-operators -w
 ----
 
 You can also explicitly verify that the Kuadrant system successfully initialized by checking its deployment conditions:
 [source,bash]
 ----
-oc wait kuadrant/kuadrant --for="condition=Ready=true" -n kuadrant-system --timeout=300s
+oc wait kuadrant/kuadrant --for="condition=Ready=true" -n openshift-operators --timeout=300s
 ----
 
 ---
