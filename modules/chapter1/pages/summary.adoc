@@ -1,4 +1,4 @@
-= Course Conclusion: The MaaS Operator Foundation
+= Summary: The MaaS Operator Foundation
 :navtitle: Course Summary
 :toc: macro
 
