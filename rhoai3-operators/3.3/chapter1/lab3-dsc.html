@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>DSCI and DataScienceCluster Configuration :: OpenShift Ecosystem &amp; RHOAI 3x Control Plane</title>
+    <title>Activating DSCI and DataScienceCluster :: OpenShift Ecosystem &amp; RHOAI 3x Control Plane</title>
     <link rel="prev" href="lab0.html">
     <link rel="next" href="summary.html">
     <meta name="generator" content="Antora 3.1.3">
@@ -98,7 +98,7 @@
   <div class="toc-menu"></div>
 </aside>
 <article class="doc">
-<h1 class="page">DSCI and DataScienceCluster Configuration</h1>
+<h1 class="page">Activating DSCI and DataScienceCluster</h1>
 <div id="preamble">
 <div class="sectionbody">
 <div class="paragraph">
@@ -145,34 +145,48 @@
 <h2 id="_configuring_the_datasciencecluster_dsc"><a class="anchor" href="#_configuring_the_datasciencecluster_dsc"></a>Configuring the DataScienceCluster (DSC)</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <code>DataScienceCluster</code> is the master toggle switch for your AI platform. By default, the operator might create a basic one, but for a true Models-as-a-Service (MaaS) architecture leveraging the advanced operators we installed earlier, we need to apply a highly specific configuration.</p>
+<p>The <code>DataScienceCluster</code> is the master toggle switch for your AI platform. By default, the operator creates a basic one, but for a true Models-as-a-Service (MaaS) architecture leveraging the advanced operators we installed earlier, we need to apply a highly specific configuration to update the existing cluster state.</p>
 </div>
 <div class="sect2">
 <h3 id="_the_maas_configuration_strategy"><a class="anchor" href="#_the_maas_configuration_strategy"></a>The MaaS Configuration Strategy</h3>
 <div class="paragraph">
-<p>For a modern MaaS stack, we need to ensure the following components are strictly managed:</p>
+<p>For a modern MaaS stack in OpenShift AI 3.3, we need to ensure the following components are strictly managed to match our infrastructure:</p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>KServe:</strong> The core model-serving engine.</p>
+<p><strong>KServe:</strong> The core model-serving engine. We set <code>modelsAsService</code> to Managed to activate our Kuadrant integration, and use <code>Headless</code> raw deployment for modern routing without Serverless.</p>
 </li>
 <li>
-<p><strong>Kueue:</strong> For distributed workload and job queue management, set to Unmanaged.</p>
+<p><strong>Kueue:</strong> Set to <code>Unmanaged</code>. <strong>Why?</strong> Because we manually installed the Red Hat build of Kueue via OLM in the previous section. This tells RHOAI to use our cluster-wide instance instead of deploying a conflicting internal one.</p>
 </li>
 <li>
 <p><strong>Dashboard:</strong> The UI for your data scientists.</p>
 </li>
 <li>
-<p><strong>Leader Worker Set:</strong> For distributed compute execution.</p>
+<p><strong>Training Operator:</strong> Replaces legacy components for distributed compute execution and natively hooks into the LeaderWorkerSet operator we installed earlier.</p>
 </li>
 </ul>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_applying_the_maas_datasciencecluster"><a class="anchor" href="#_applying_the_maas_datasciencecluster"></a>Applying the MaaS DataScienceCluster</h3>
+<h3 id="_applying_the_maas_datasciencecluster_update"><a class="anchor" href="#_applying_the_maas_datasciencecluster_update"></a>Applying the MaaS DataScienceCluster Update</h3>
 <div class="paragraph">
-<p>This YAML configuration enables the required MaaS components while safely ignoring legacy or unused tools (like ModelMesh, which is typically for smaller, edge-scale models).</p>
+<p>Running this <code>oc apply</code> command will merge these new, production-ready settings into your existing <code>default-dsc</code> resource, activating the new features.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<div class="paragraph">
+<p>The <code>DataScienceCluster</code> is a <strong>cluster-scoped</strong> resource. You do not need to switch to a specific namespace (like <code>redhat-ods-operator</code>) to run this command. You can apply it from anywhere in your CLI.</p>
+</div>
+</td>
+</tr>
+</table>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -183,16 +197,44 @@ metadata:
   name: default-dsc
 spec:
   components:
-   kserve:
+    # 1. Core User Interface
+    dashboard:
+      managementState: Managed
+
+    # 2. Modern Model Serving (MaaS Core)
+    kserve:
       managementState: Managed
       modelsAsService:
         managementState: Removed
       nim:
         managementState: Managed
       rawDeploymentServiceConfig: Headless
+
+    # 3. Model Management &amp; Pipelines
     modelregistry:
       managementState: Managed
       registriesNamespace: rhoai-model-registries
+    aipipelines:
+      managementState: Managed
+
+    # 4. Distributed Workloads &amp; Training
+    kueue:
+      defaultClusterQueueName: default
+      defaultLocalQueueName: default
+      managementState: Unmanaged
+    ray:
+      managementState: Managed
+    trainingoperator:
+      managementState: Managed
+    llamastackoperator:
+      managementState: Managed
+
+    # 5. Data Science Environments
+    workbenches:
+      managementState: Managed
+      workbenchNamespace: rhods-notebooks
+
+    # 6. Additional Integrations
     feastoperator:
       managementState: Managed
     trustyai:
@@ -201,25 +243,8 @@ spec:
           permitCodeExecution: deny
           permitOnline: deny
       managementState: Managed
-    aipipelines:
-      managementState: Managed
-    ray:
-      managementState: Managed
-    kueue:
-      defaultClusterQueueName: default
-      defaultLocalQueueName: default
-      managementState: Removed
-    workbenches:
-      managementState: Managed
-      workbenchNamespace: rhods-notebooks
     mlflowoperator: {}
-    dashboard:
-      managementState: Managed
     trainer: {}
-    llamastackoperator:
-      managementState: Managed
-    trainingoperator:
-      managementState: Managed
 EOF</code></pre>
 </div>
 </div>
@@ -230,12 +255,12 @@ EOF</code></pre>
 <h2 id="_verification"><a class="anchor" href="#_verification"></a>Verification</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Applying the <code>DataScienceCluster</code> triggers the RHOAI operator to orchestrate a massive rollout across your cluster. It will create new namespaces (like <code>redhat-ods-applications</code>), configure the Service Mesh control plane, and spin up the KServe and Kuadrant integrations.</p>
+<p>Applying the updated <code>DataScienceCluster</code> triggers the RHOAI operator to orchestrate a rollout across your cluster. It will configure the Service Mesh control plane and spin up the KServe and Kuadrant integrations.</p>
 </div>
 <div class="sect2">
 <h3 id="_1_monitor_the_rollout"><a class="anchor" href="#_1_monitor_the_rollout"></a>1. Monitor the Rollout</h3>
 <div class="paragraph">
-<p>This process can take 5 to 10 minutes. Watch the status of the DataScienceCluster:</p>
+<p>This process can take a few minutes as the operator reconciles the new state. Watch the status of the DataScienceCluster:</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -249,7 +274,7 @@ EOF</code></pre>
 <div class="sect2">
 <h3 id="_2_verify_the_rhoai_applications"><a class="anchor" href="#_2_verify_the_rhoai_applications"></a>2. Verify the RHOAI Applications</h3>
 <div class="paragraph">
-<p>Check the newly created applications namespace to ensure the core MaaS pods (Dashboard, KServe controller, CodeFlare) are running:</p>
+<p>Check the newly created applications namespace to ensure the core MaaS pods (Dashboard, KServe controller, etc.) are running:</p>
 </div>
 <div class="listingblock">
 <div class="content">

@@ -726,30 +726,23 @@ EOF</code></pre>
 <div class="sect2">
 <h3 id="_installing_the_operator_3"><a class="anchor" href="#_installing_the_operator_3"></a>Installing the Operator</h3>
 <div class="sect3">
-<h4 id="_create_the_dedicated_namespace_3"><a class="anchor" href="#_create_the_dedicated_namespace_3"></a>Create the Dedicated Namespace</h4>
+<h4 id="_switch_to_the_global_operators_namespace"><a class="anchor" href="#_switch_to_the_global_operators_namespace"></a>Switch to the Global Operators Namespace</h4>
 <div class="paragraph">
-<p>Red Hat recommends installing the Connectivity Link operator and its subsequent Kuadrant resources into a dedicated <code>openshift-operators</code> namespace.</p>
+<p>Red Hat&#8217;s default namespace for cluster-wide operators is <code>openshift-operators</code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc create namespace openshift-operators</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc project openshift-operators</code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p><strong>[IMPORTANT]</strong></p>
 </div>
-<div class="sect3">
-<h4 id="_create_the_operatorgroup_5"><a class="anchor" href="#_create_the_operatorgroup_5"></a>Create the OperatorGroup</h4>
-<div class="listingblock">
+<div class="exampleblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt;EOF | oc create -f -
-apiVersion: operators.coreos.com/v1
-kind: OperatorGroup
-metadata:
-  generateName: rhcl-operator-
-  namespace: openshift-operators
-spec:
-  targetNamespaces:
-  - openshift-operators
-EOF</code></pre>
+<div class="paragraph">
+<p><strong>Do not create an OperatorGroup.</strong> Because <code>openshift-operators</code> is a default system namespace, OpenShift has already provisioned a global <code>OperatorGroup</code> for it. Creating a second one will cause the Operator Lifecycle Manager (OLM) to freeze the installation.</p>
+</div>
 </div>
 </div>
 </div>
@@ -790,7 +783,7 @@ EOF</code></pre>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get csv -n openshift-operators</code></pre>
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">oc get csv -n openshift-operators | grep rhcl</code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -852,7 +845,7 @@ EOF</code></pre>
 <div class="sect2">
 <h3 id="_installing_the_operator_4"><a class="anchor" href="#_installing_the_operator_4"></a>Installing the Operator</h3>
 <div class="sect3">
-<h4 id="_create_the_dedicated_namespace_4"><a class="anchor" href="#_create_the_dedicated_namespace_4"></a>Create the Dedicated Namespace</h4>
+<h4 id="_create_the_dedicated_namespace_3"><a class="anchor" href="#_create_the_dedicated_namespace_3"></a>Create the Dedicated Namespace</h4>
 <div class="paragraph">
 <p>Red Hat&#8217;s official tracking namespace for the Kueue controller is <code>openshift-kueue-operator</code>.</p>
 </div>
@@ -990,7 +983,7 @@ This guide intentionally stops after installing the Operator. It does <strong>no
 <div class="sect2">
 <h3 id="_installing_the_operator_5"><a class="anchor" href="#_installing_the_operator_5"></a>Installing the Operator</h3>
 <div class="sect3">
-<h4 id="_create_the_dedicated_namespace_5"><a class="anchor" href="#_create_the_dedicated_namespace_5"></a>Create the Dedicated Namespace</h4>
+<h4 id="_create_the_dedicated_namespace_4"><a class="anchor" href="#_create_the_dedicated_namespace_4"></a>Create the Dedicated Namespace</h4>
 <div class="paragraph">
 <p>Red Hat OpenShift AI requires its operator controller to be installed in the <code>redhat-ods-operator</code> namespace.</p>
 </div>
@@ -1001,7 +994,7 @@ This guide intentionally stops after installing the Operator. It does <strong>no
 </div>
 </div>
 <div class="sect3">
-<h4 id="_create_the_operatorgroup_6"><a class="anchor" href="#_create_the_operatorgroup_6"></a>Create the OperatorGroup</h4>
+<h4 id="_create_the_operatorgroup_5"><a class="anchor" href="#_create_the_operatorgroup_5"></a>Create the OperatorGroup</h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">cat &lt;&lt;EOF | oc create -f -
