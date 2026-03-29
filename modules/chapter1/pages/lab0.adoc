@@ -462,29 +462,18 @@ This guide walks through deploying the Red Hat Connectivity Link Operator. In Op
 
 === Installing the Operator
 
-==== Create the Dedicated Namespace
-Red Hat recommends installing the Connectivity Link operator and its subsequent Kuadrant resources into a dedicated `openshift-operators` namespace.
+==== Switch to the Global Operators Namespace
+Red Hat's default namespace for cluster-wide operators is `openshift-operators`. 
 
 [source,bash]
 ----
-oc create namespace openshift-operators
+oc project openshift-operators
 ----
 
-==== Create the OperatorGroup
-
-[source,bash]
-----
-cat <<EOF | oc create -f -
-apiVersion: operators.coreos.com/v1
-kind: OperatorGroup
-metadata:
-  generateName: rhcl-operator-
-  namespace: openshift-operators
-spec:
-  targetNamespaces:
-  - openshift-operators
-EOF
-----
+*[IMPORTANT]*
+====
+**Do not create an OperatorGroup.** Because `openshift-operators` is a default system namespace, OpenShift has already provisioned a global `OperatorGroup` for it. Creating a second one will cause the Operator Lifecycle Manager (OLM) to freeze the installation.
+====
 
 ==== Dynamically Find the Channel and Subscribe
 *Management Tactic:* We query the `redhat-operators` catalog for the current default channel of the `rhcl-operator` package to ensure the installation remains resilient across OpenShift major releases.
@@ -517,12 +506,12 @@ Wait a few moments, then check the ClusterServiceVersion (CSV) to ensure the ope
 
 [source,bash]
 ----
-oc get csv -n openshift-operators
+oc get csv -n openshift-operators | grep rhcl
 ----
 *Note:* Proceed to the next step only when the `PHASE` displays as `Succeeded`.
 
 ==== Create the Kuadrant Custom Resource
-The operator is installed, but the system isn't active until we deploy the Kuadrant control plane. Passing an empty `spec: {}` tells the operator to deploy the most optimal default configuration.
+The operator is installed, but the system isn't active until we deploy the Kuadrant control plane. Passing an empty `spec: {}` tells the operator to deploy the most optimal default configuration. 
 
 [source,bash]
 ----

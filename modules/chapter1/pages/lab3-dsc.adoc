@@ -1,4 +1,4 @@
-= DSCI and DataScienceCluster Configuration
+= Activating DSCI and DataScienceCluster
 
 Installing the Red Hat OpenShift AI (RHOAI) Operator only deploys the controller. To actually build your Models-as-a-Service (MaaS) environment, you must configure two core Custom Resources: `DSCInitialization` (DSCI) and `DataScienceCluster` (DSC).
 
@@ -19,23 +19,25 @@ While you rarely need to create this from scratch, understanding its configurati
 oc get dsci default-dsci -o yaml
 ----
 
-
-
 == Configuring the DataScienceCluster (DSC)
 
-The `DataScienceCluster` is the master toggle switch for your AI platform. By default, the operator might create a basic one, but for a true Models-as-a-Service (MaaS) architecture leveraging the advanced operators we installed earlier, we need to apply a highly specific configuration.
+The `DataScienceCluster` is the master toggle switch for your AI platform. By default, the operator creates a basic one, but for a true Models-as-a-Service (MaaS) architecture leveraging the advanced operators we installed earlier, we need to apply a highly specific configuration to update the existing cluster state.
 
 === The MaaS Configuration Strategy
-For a modern MaaS stack, we need to ensure the following components are strictly managed:
+For a modern MaaS stack in OpenShift AI 3.3, we need to ensure the following components are strictly managed to match our infrastructure:
 
- * **KServe:** The core model-serving engine.
- * **Kueue:** For distributed workload and job queue management, set to Unmanaged.
- * **Dashboard:** The UI for your data scientists.
- * **Leader Worker Set:** For distributed compute execution.
+* **KServe:** The core model-serving engine. We set `modelsAsService` to Managed to activate our Kuadrant integration, and use `Headless` raw deployment for modern routing without Serverless.
+* **Kueue:** Set to `Unmanaged`. *Why?* Because we manually installed the Red Hat build of Kueue via OLM in the previous section. This tells RHOAI to use our cluster-wide instance instead of deploying a conflicting internal one.
+* **Dashboard:** The UI for your data scientists.
+* **Training Operator:** Replaces legacy components for distributed compute execution and natively hooks into the LeaderWorkerSet operator we installed earlier.
 
+=== Applying the MaaS DataScienceCluster Update
+Running this `oc apply` command will merge these new, production-ready settings into your existing `default-dsc` resource, activating the new features.
 
-=== Applying the MaaS DataScienceCluster
-This YAML configuration enables the required MaaS components while safely ignoring legacy or unused tools (like ModelMesh, which is typically for smaller, edge-scale models).
+[NOTE]
+====
+The `DataScienceCluster` is a **cluster-scoped** resource. You do not need to switch to a specific namespace (like `redhat-ods-operator`) to run this command. You can apply it from anywhere in your CLI.
+====
 
 [source,bash]
 ----
@@ -46,16 +48,44 @@ metadata:
   name: default-dsc
 spec:
   components:
-   kserve:
+    # 1. Core User Interface
+    dashboard:
+      managementState: Managed
+      
+    # 2. Modern Model Serving (MaaS Core)
+    kserve:
       managementState: Managed
       modelsAsService:
         managementState: Removed
       nim:
         managementState: Managed
       rawDeploymentServiceConfig: Headless
+      
+    # 3. Model Management & Pipelines
     modelregistry:
       managementState: Managed
       registriesNamespace: rhoai-model-registries
+    aipipelines:
+      managementState: Managed
+      
+    # 4. Distributed Workloads & Training
+    kueue:
+      defaultClusterQueueName: default
+      defaultLocalQueueName: default
+      managementState: Unmanaged
+    ray:
+      managementState: Managed
+    trainingoperator:
+      managementState: Managed
+    llamastackoperator:
+      managementState: Managed
+      
+    # 5. Data Science Environments
+    workbenches:
+      managementState: Managed
+      workbenchNamespace: rhods-notebooks
+      
+    # 6. Additional Integrations
     feastoperator:
       managementState: Managed
     trustyai:
@@ -64,34 +94,17 @@ spec:
           permitCodeExecution: deny
           permitOnline: deny
       managementState: Managed
-    aipipelines:
-      managementState: Managed
-    ray:
-      managementState: Managed
-    kueue:
-      defaultClusterQueueName: default
-      defaultLocalQueueName: default
-      managementState: Removed
-    workbenches:
-      managementState: Managed
-      workbenchNamespace: rhods-notebooks
     mlflowoperator: {}
-    dashboard:
-      managementState: Managed
     trainer: {}
-    llamastackoperator:
-      managementState: Managed
-    trainingoperator:
-      managementState: Managed
 EOF
 ----
 
 == Verification
 
-Applying the `DataScienceCluster` triggers the RHOAI operator to orchestrate a massive rollout across your cluster. It will create new namespaces (like `redhat-ods-applications`), configure the Service Mesh control plane, and spin up the KServe and Kuadrant integrations.
+Applying the updated `DataScienceCluster` triggers the RHOAI operator to orchestrate a rollout across your cluster. It will configure the Service Mesh control plane and spin up the KServe and Kuadrant integrations.
 
 === 1. Monitor the Rollout
-This process can take 5 to 10 minutes. Watch the status of the DataScienceCluster:
+This process can take a few minutes as the operator reconciles the new state. Watch the status of the DataScienceCluster:
 
 [source,bash]
 ----
@@ -100,7 +113,7 @@ oc get datasciencecluster default-dsc -o jsonpath='{.status.phase}{"\n"}'
 Wait until the output says `Ready`.
 
 === 2. Verify the RHOAI Applications
-Check the newly created applications namespace to ensure the core MaaS pods (Dashboard, KServe controller, CodeFlare) are running:
+Check the newly created applications namespace to ensure the core MaaS pods (Dashboard, KServe controller, etc.) are running:
 
 [source,bash]
 ----
