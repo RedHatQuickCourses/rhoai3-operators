@@ -492,11 +492,23 @@ metadata:
   namespace: openshift-operators
 spec:
   channel: "${CHANNEL}"
-  installPlanApproval: Automatic
+  installPlanApproval: Manual
   name: rhcl-operator
   source: redhat-operators
   sourceNamespace: openshift-marketplace
+  startingCSV: rhcl-operator.v1.3.1
 EOF
+----
+
+The Connectivity link Operator also installed the DNS, Limitador, and authorino Operators and these components need to be approved.
+
+[source,bash]
+----
+# Find and approve any pending InstallPlans for our operators
+for ip in $(oc get installplan -n openshift-operators -o jsonpath='{.items[?(@.spec.approved==false)].metadata.name}'); do
+  echo "Approving InstallPlan: $ip"
+  oc patch installplan $ip -n openshift-operators --type merge -p '{"spec":{"approved":true}}'
+done
 ----
 
 === Deploying the Kuadrant Instance
