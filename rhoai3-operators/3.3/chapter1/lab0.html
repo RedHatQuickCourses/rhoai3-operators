@@ -773,12 +773,20 @@ spec:
 EOF</code></pre>
 </div>
 </div>
-<div class="paragraph">
-<p>The Connectivity link Operator also installed the DNS, Limitador, and authorino Operators and these components need to be approved.</p>
+</div>
+<div class="sect3">
+<h4 id="_auto_approve_the_installation_and_dependencies"><a class="anchor" href="#_auto_approve_the_installation_and_dependencies"></a>Auto-Approve the Installation and Dependencies</h4>
+<div class="literalblock">
+<div class="content">
+<pre>Because we set the subscription to `Manual` to freeze the version, we must approve the initial `InstallPlan`. The Connectivity Link Operator also pulls in dependencies like DNS and Limitador, which will generate their own InstallPlans. This script automatically finds and approves all of them so you don't have to use the Web Console UI.</pre>
+</div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash"># Find and approve any pending InstallPlans for our operators
+<pre class="highlightjs highlight"><code class="language-bash hljs" data-lang="bash">echo "Waiting for OLM to generate InstallPlans..."
+sleep 15
+
+# Find and approve any pending InstallPlans for our operators
 for ip in $(oc get installplan -n openshift-operators -o jsonpath='{.items[?(@.spec.approved==false)].metadata.name}'); do
   echo "Approving InstallPlan: $ip"
   oc patch installplan $ip -n openshift-operators --type merge -p '{"spec":{"approved":true}}'
@@ -800,7 +808,7 @@ done</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p><strong>Note:</strong> Proceed to the next step only when the <code>PHASE</code> displays as <code>Succeeded</code>.</p>
+<p><strong>Note:</strong> Proceed to the next step only when the <code>PHASE</code> displays as <code>Succeeded</code>. If no response run the above Auto-Approve script again.</p>
 </div>
 </div>
 <div class="sect3">
