@@ -500,10 +500,14 @@ spec:
 EOF
 ----
 
-The Connectivity link Operator also installed the DNS, Limitador, and authorino Operators and these components need to be approved.
+==== Auto-Approve the Installation and Dependencies
+ Because we set the subscription to `Manual` to freeze the version, we must approve the initial `InstallPlan`. The Connectivity Link Operator also pulls in dependencies like DNS and Limitador, which will generate their own InstallPlans. This script automatically finds and approves all of them so you don't have to use the Web Console UI.
 
 [source,bash]
 ----
+echo "Waiting for OLM to generate InstallPlans..."
+sleep 15
+
 # Find and approve any pending InstallPlans for our operators
 for ip in $(oc get installplan -n openshift-operators -o jsonpath='{.items[?(@.spec.approved==false)].metadata.name}'); do
   echo "Approving InstallPlan: $ip"
@@ -520,7 +524,7 @@ Wait a few moments, then check the ClusterServiceVersion (CSV) to ensure the ope
 ----
 oc get csv -n openshift-operators | grep rhcl
 ----
-*Note:* Proceed to the next step only when the `PHASE` displays as `Succeeded`.
+*Note:* Proceed to the next step only when the `PHASE` displays as `Succeeded`. If no response run the above Auto-Approve script again.
 
 ==== Create the Kuadrant Custom Resource
 The operator is installed, but the system isn't active until we deploy the Kuadrant control plane. Passing an empty `spec: {}` tells the operator to deploy the most optimal default configuration. 
